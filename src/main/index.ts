@@ -8,7 +8,10 @@ function createWindow(): void {
   // Create the browser window.
   const mainWindow = new BrowserWindow({
     width: 900,
-    height: 670,
+    height: 650,
+    minWidth: 600,
+    minHeight: 400,
+    title: 'Daily Todo List',
     show: false,
     autoHideMenuBar: true,
     ...(process.platform === 'linux' ? { icon } : {}),
