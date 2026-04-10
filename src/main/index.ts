@@ -1,4 +1,5 @@
-import { app, shell, BrowserWindow, ipcMain, Tray, Menu, nativeImage, screen, net } from 'electron'
+import { app, shell, BrowserWindow, ipcMain, Tray, Menu, nativeImage, screen } from 'electron'
+import { get as httpsGet } from 'https'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
@@ -113,25 +114,32 @@ app.whenReady().then(() => {
     win?.hide()
   })
 
+  function nodeGet(url: string): Promise<string> {
+    return new Promise((resolve, reject) => {
+      httpsGet(url, { rejectUnauthorized: false }, (res) => {
+        const chunks: Buffer[] = []
+        res.on('data', (c: Buffer) => chunks.push(c))
+        res.on('end', () => resolve(Buffer.concat(chunks).toString()))
+        res.on('error', reject)
+      }).on('error', reject)
+    })
+  }
+
   ipcMain.handle('date:get-network', async () => {
     // Primary: worldtimeapi.org
     try {
-      const res = await net.fetch('https://worldtimeapi.org/api/timezone/Asia/Seoul')
-      if (res.ok) {
-        const data = await res.json() as { datetime: string }
-        return (data.datetime as string).slice(0, 10)
-      }
+      const body = await nodeGet('https://worldtimeapi.org/api/timezone/Asia/Seoul')
+      const data = JSON.parse(body) as { datetime: string }
+      return data.datetime.slice(0, 10)
     } catch { /* try fallback */ }
 
     // Fallback: timeapi.io
     try {
-      const res = await net.fetch('https://timeapi.io/api/time/current/zone?timeZone=Asia/Seoul')
-      if (res.ok) {
-        const data = await res.json() as { year: number; month: number; day: number }
-        const m = String(data.month).padStart(2, '0')
-        const d = String(data.day).padStart(2, '0')
-        return `${data.year}-${m}-${d}`
-      }
+      const body = await nodeGet('https://timeapi.io/api/time/current/zone?timeZone=Asia/Seoul')
+      const data = JSON.parse(body) as { year: number; month: number; day: number }
+      const m = String(data.month).padStart(2, '0')
+      const d = String(data.day).padStart(2, '0')
+      return `${data.year}-${m}-${d}`
     } catch { /* fall through */ }
 
     return null
