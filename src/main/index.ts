@@ -114,14 +114,27 @@ app.whenReady().then(() => {
   })
 
   ipcMain.handle('date:get-network', async () => {
+    // Primary: worldtimeapi.org
     try {
       const res = await net.fetch('https://worldtimeapi.org/api/timezone/Asia/Seoul')
-      if (!res.ok) throw new Error(`HTTP ${res.status}`)
-      const data = await res.json() as { datetime: string }
-      return (data.datetime as string).slice(0, 10) // "YYYY-MM-DD" in KST
-    } catch {
-      return null
-    }
+      if (res.ok) {
+        const data = await res.json() as { datetime: string }
+        return (data.datetime as string).slice(0, 10)
+      }
+    } catch { /* try fallback */ }
+
+    // Fallback: timeapi.io
+    try {
+      const res = await net.fetch('https://timeapi.io/api/time/current/zone?timeZone=Asia/Seoul')
+      if (res.ok) {
+        const data = await res.json() as { year: number; month: number; day: number }
+        const m = String(data.month).padStart(2, '0')
+        const d = String(data.day).padStart(2, '0')
+        return `${data.year}-${m}-${d}`
+      }
+    } catch { /* fall through */ }
+
+    return null
   })
 
   createWindow()
