@@ -1,10 +1,15 @@
-import { app, shell, BrowserWindow, ipcMain, Tray, Menu, nativeImage } from 'electron'
+import { app, shell, BrowserWindow, ipcMain, Tray, Menu, nativeImage, screen } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
 import { registerTodosIpc } from './todos-store'
 
 let tray: Tray | null = null
+
+function getBottomRightPosition(width: number, height: number): { x: number; y: number } {
+  const { width: sw, height: sh } = screen.getPrimaryDisplay().workAreaSize
+  return { x: sw - width - 16, y: sh - height - 16 }
+}
 
 function createTray(mainWindow: BrowserWindow): void {
   const trayIcon = nativeImage.createFromPath(icon).resize({ width: 16, height: 16 })
@@ -30,25 +35,34 @@ function createTray(mainWindow: BrowserWindow): void {
 
   tray.setContextMenu(contextMenu)
 
-  tray.on('double-click', () => {
-    if (mainWindow.isVisible()) {
-      mainWindow.focus()
+  // Single click to toggle popup
+  tray.on('click', () => {
+    if (mainWindow.isVisible() && mainWindow.isFocused()) {
+      mainWindow.hide()
     } else {
       mainWindow.show()
+      mainWindow.focus()
     }
   })
 }
 
 function createWindow(): void {
+  const width = 360
+  const height = 560
+  const { x, y } = getBottomRightPosition(width, height)
+
   const mainWindow = new BrowserWindow({
-    width: 900,
-    height: 650,
-    minWidth: 600,
-    minHeight: 400,
+    width,
+    height,
+    x,
+    y,
+    frame: false,
+    transparent: true,
+    resizable: false,
+    skipTaskbar: true,
+    alwaysOnTop: false,
     title: 'Daily Todo List',
     show: false,
-    autoHideMenuBar: true,
-    ...(process.platform !== 'darwin' ? { icon } : {}),
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
       sandbox: false,
@@ -57,14 +71,18 @@ function createWindow(): void {
 
   mainWindow.on('ready-to-show', () => {
     mainWindow.show()
+    mainWindow.focus()
   })
 
-  // Hide to tray instead of closing on Windows/Linux
+  // Hide instead of close
   mainWindow.on('close', (e) => {
-    if (process.platform !== 'darwin') {
-      e.preventDefault()
-      mainWindow.hide()
-    }
+    e.preventDefault()
+    mainWindow.hide()
+  })
+
+  // Hide when focus is lost (click outside)
+  mainWindow.on('blur', () => {
+    if (!is.dev) mainWindow.hide()
   })
 
   mainWindow.webContents.setWindowOpenHandler((details) => {
@@ -90,7 +108,10 @@ app.whenReady().then(() => {
     optimizer.watchWindowShortcuts(window)
   })
 
-  ipcMain.on('ping', () => console.log('pong'))
+  ipcMain.on('window:hide', (event) => {
+    const win = BrowserWindow.fromWebContents(event.sender)
+    win?.hide()
+  })
 
   createWindow()
 
