@@ -25,7 +25,7 @@ export default function App() {
   const filteredTodos = useMemo(() => {
     switch (activeFilter) {
       case 'today':
-        return todos.filter((t) => t.createdAt === today && !t.completed)
+        return todos.filter((t) => t.createdAt === today)
       case 'all':
         return todos.filter((t) => !t.completed)
       case 'important':
