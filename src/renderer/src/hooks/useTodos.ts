@@ -23,13 +23,13 @@ export function useTodos() {
     window.api.saveTodos(JSON.stringify(updated))
   }
 
-  function addTodo(title: string) {
+  function addTodo(title: string, date?: string) {
     const newTodo: Todo = {
       id: crypto.randomUUID(),
       title: title.trim(),
       completed: false,
       important: false,
-      createdAt: today(),
+      createdAt: date ?? today(),
     }
     save([...todos, newTodo])
   }
