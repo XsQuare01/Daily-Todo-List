@@ -15,7 +15,7 @@ export function TodoList({ todos, onToggleComplete, onToggleImportant, onDelete,
     return (
       <div className="flex flex-col items-center justify-center flex-1 gap-2 text-zinc-600">
         <Inbox size={32} strokeWidth={1.5} />
-        <span className="text-sm">할 일이 없습니다</span>
+        <span className="text-base">할 일이 없습니다</span>
       </div>
     )
   }

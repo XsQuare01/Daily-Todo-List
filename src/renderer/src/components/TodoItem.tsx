@@ -40,14 +40,14 @@ export function TodoItem({ todo, onToggleComplete, onToggleImportant, onDelete, 
         >
           <span
             className={cn(
-              'text-sm leading-relaxed block truncate',
+              'text-base leading-relaxed block truncate',
               todo.completed ? 'line-through text-zinc-600' : 'text-zinc-200'
             )}
           >
             {todo.title}
           </span>
           {todo.description && !expanded && (
-            <span className="text-xs text-zinc-600 truncate block leading-tight mt-0.5">
+            <span className="text-sm text-zinc-600 truncate block leading-tight mt-0.5">
               {todo.description}
             </span>
           )}
@@ -80,7 +80,7 @@ export function TodoItem({ todo, onToggleComplete, onToggleImportant, onDelete, 
           <textarea
             autoFocus
             rows={2}
-            className="w-full bg-transparent text-zinc-400 text-xs resize-none outline-none placeholder-zinc-600 leading-relaxed"
+            className="w-full bg-transparent text-zinc-400 text-sm resize-none outline-none placeholder-zinc-600 leading-relaxed"
             placeholder="메모 추가..."
             spellCheck={false}
             value={localDesc}

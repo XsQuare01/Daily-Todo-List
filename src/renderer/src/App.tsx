@@ -50,8 +50,8 @@ export default function App() {
         className="flex items-center gap-2 px-4 py-3 bg-zinc-950/70 border-b border-zinc-800/40 shrink-0"
       >
         <div className="flex-1 min-w-0">
-          <span className="text-xs font-semibold text-zinc-300 block leading-none">Daily Todo</span>
-          <span className="text-[10px] text-zinc-600 tabular-nums">{formattedDate}</span>
+          <span className="text-sm font-semibold text-zinc-300 block leading-none">Daily Todo</span>
+          <span className="text-xs text-zinc-600 tabular-nums">{formattedDate}</span>
         </div>
         <button
           style={noDrag}
@@ -70,7 +70,7 @@ export default function App() {
             key={key}
             onClick={() => setActiveFilter(key)}
             className={cn(
-              'flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs transition-colors',
+              'flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-sm transition-colors',
               activeFilter === key
                 ? 'bg-zinc-800 text-zinc-100'
                 : 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/50'
