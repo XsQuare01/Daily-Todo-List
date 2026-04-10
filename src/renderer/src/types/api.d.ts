@@ -6,6 +6,7 @@ declare global {
       getTodos: () => Promise<string>
       saveTodos: (json: string) => Promise<void>
       hideWindow: () => void
+      getNetworkDate: () => Promise<string | null>
     }
   }
 }

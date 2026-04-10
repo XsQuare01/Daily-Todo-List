@@ -1,4 +1,4 @@
-import { app, shell, BrowserWindow, ipcMain, Tray, Menu, nativeImage, screen } from 'electron'
+import { app, shell, BrowserWindow, ipcMain, Tray, Menu, nativeImage, screen, net } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
@@ -111,6 +111,19 @@ app.whenReady().then(() => {
   ipcMain.on('window:hide', (event) => {
     const win = BrowserWindow.fromWebContents(event.sender)
     win?.hide()
+  })
+
+  ipcMain.handle('date:get-network', async () => {
+    try {
+      const controller = new AbortController()
+      const timer = setTimeout(() => controller.abort(), 3000)
+      const res = await net.fetch('https://worldtimeapi.org/api/ip', { signal: controller.signal })
+      clearTimeout(timer)
+      const data = await res.json() as { datetime: string }
+      return (data.datetime as string).slice(0, 10)
+    } catch {
+      return null
+    }
   })
 
   createWindow()

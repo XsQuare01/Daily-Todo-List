@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { X, Calendar, List, Star, CheckCircle, ChevronLeft, ChevronRight } from 'lucide-react'
 import { TodoList } from './components/TodoList'
 import { AddTodoInput } from './components/AddTodoInput'
@@ -39,8 +39,17 @@ export default function App() {
   const [selectedDate, setSelectedDate] = useState(() => toISODate(new Date()))
   const { todos, addTodo, toggleComplete, toggleImportant, deleteTodo, updateDescription } = useTodos()
 
-  const today = toISODate(new Date())
+  const [today, setToday] = useState(() => toISODate(new Date()))
   const isToday = selectedDate === today
+
+  useEffect(() => {
+    window.api.getNetworkDate().then((date) => {
+      if (date) {
+        setToday(date)
+        setSelectedDate(date)
+      }
+    }).catch(() => {/* stay on system date */})
+  }, [])
 
   const filteredTodos = useMemo(() => {
     switch (activeFilter) {
