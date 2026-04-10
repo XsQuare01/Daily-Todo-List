@@ -103,7 +103,7 @@ function createWindow(): void {
 app.whenReady().then(() => {
   registerTodosIpc()
 
-  electronApp.setAppUserModelId('com.dailytodolist.app')
+  electronApp.setAppUserModelId('com.dailytodo.app')
 
   app.on('browser-window-created', (_, window) => {
     optimizer.watchWindowShortcuts(window)
