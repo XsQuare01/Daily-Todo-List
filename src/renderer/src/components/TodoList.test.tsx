@@ -8,15 +8,22 @@ const todos: Todo[] = [
   { id: '2', title: '두 번째', completed: true, important: false, createdAt: '2026-04-09' },
 ]
 
+const defaultProps = {
+  onToggleComplete: vi.fn(),
+  onToggleImportant: vi.fn(),
+  onDelete: vi.fn(),
+  onUpdateDescription: vi.fn(),
+}
+
 describe('TodoList', () => {
   it('renders all todos', () => {
-    render(<TodoList todos={todos} onToggleComplete={vi.fn()} onToggleImportant={vi.fn()} onDelete={vi.fn()} />)
+    render(<TodoList todos={todos} {...defaultProps} />)
     expect(screen.getByText('첫 번째')).toBeInTheDocument()
     expect(screen.getByText('두 번째')).toBeInTheDocument()
   })
 
   it('renders empty state message when no todos', () => {
-    render(<TodoList todos={[]} onToggleComplete={vi.fn()} onToggleImportant={vi.fn()} onDelete={vi.fn()} />)
+    render(<TodoList todos={[]} {...defaultProps} />)
     expect(screen.getByText('할 일이 없습니다')).toBeInTheDocument()
   })
 })

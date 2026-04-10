@@ -46,5 +46,9 @@ export function useTodos() {
     save(todos.filter((t) => t.id !== id))
   }
 
-  return { todos, addTodo, toggleComplete, toggleImportant, deleteTodo }
+  function updateDescription(id: string, description: string) {
+    save(todos.map((t) => (t.id === id ? { ...t, description } : t)))
+  }
+
+  return { todos, addTodo, toggleComplete, toggleImportant, deleteTodo, updateDescription }
 }
