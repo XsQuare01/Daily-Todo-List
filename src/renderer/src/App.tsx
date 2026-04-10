@@ -130,14 +130,15 @@ export default function App() {
             <span className={cn('text-sm tabular-nums', isToday ? 'text-zinc-200' : 'text-zinc-400')}>
               {formatDate(selectedDate)}
             </span>
-            {!isToday && (
-              <button
-                onClick={() => setSelectedDate(today)}
-                className="text-xs text-sky-500 hover:text-sky-400 transition-colors"
-              >
-                오늘
-              </button>
-            )}
+            <button
+              onClick={() => setSelectedDate(today)}
+              className={cn(
+                'text-xs transition-colors',
+                isToday ? 'text-sky-500 font-medium' : 'text-zinc-500 hover:text-sky-400'
+              )}
+            >
+              오늘
+            </button>
           </div>
 
           <button
