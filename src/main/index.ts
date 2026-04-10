@@ -117,7 +117,7 @@ app.whenReady().then(() => {
     try {
       const controller = new AbortController()
       const timer = setTimeout(() => controller.abort(), 3000)
-      const res = await net.fetch('https://worldtimeapi.org/api/ip', { signal: controller.signal })
+      const res = await net.fetch('https://worldtimeapi.org/api/timezone/Asia/Seoul', { signal: controller.signal })
       clearTimeout(timer)
       const data = await res.json() as { datetime: string }
       return (data.datetime as string).slice(0, 10)
