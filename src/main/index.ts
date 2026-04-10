@@ -115,12 +115,10 @@ app.whenReady().then(() => {
 
   ipcMain.handle('date:get-network', async () => {
     try {
-      const controller = new AbortController()
-      const timer = setTimeout(() => controller.abort(), 3000)
-      const res = await net.fetch('https://worldtimeapi.org/api/timezone/Asia/Seoul', { signal: controller.signal })
-      clearTimeout(timer)
+      const res = await net.fetch('https://worldtimeapi.org/api/timezone/Asia/Seoul')
+      if (!res.ok) throw new Error(`HTTP ${res.status}`)
       const data = await res.json() as { datetime: string }
-      return (data.datetime as string).slice(0, 10)
+      return (data.datetime as string).slice(0, 10) // "YYYY-MM-DD" in KST
     } catch {
       return null
     }
