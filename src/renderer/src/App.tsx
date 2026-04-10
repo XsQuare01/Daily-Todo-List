@@ -23,6 +23,12 @@ function toISODate(date: Date): string {
   return `${y}-${m}-${d}`
 }
 
+// KST(UTC+9) 기준 오늘 날짜 — 시스템 타임존 설정과 무관하게 정확
+function getKSTToday(): string {
+  const kst = new Date(Date.now() + 9 * 60 * 60 * 1000)
+  return kst.toISOString().slice(0, 10)
+}
+
 function offsetDate(isoDate: string, days: number): string {
   const d = new Date(isoDate + 'T00:00:00')
   d.setDate(d.getDate() + days)
@@ -41,19 +47,19 @@ function formatDate(isoDate: string): string {
 
 export default function App() {
   const [activeFilter, setActiveFilter] = useState<FilterType>('today')
-  const [selectedDate, setSelectedDate] = useState(() => toISODate(new Date()))
+  const [selectedDate, setSelectedDate] = useState(getKSTToday)
   const { todos, addTodo, toggleComplete, toggleImportant, deleteTodo, updateDescription } = useTodos()
 
-  const [today, setToday] = useState(() => toISODate(new Date()))
+  const [today, setToday] = useState(getKSTToday)
   const isToday = selectedDate === today
 
   useEffect(() => {
     window.api.getNetworkDate().then((date) => {
-      if (date) {
+      if (date && date !== today) {
         setToday(date)
         setSelectedDate(date)
       }
-    }).catch(() => {/* stay on system date */})
+    }).catch(() => {/* stay on KST date */})
   }, [])
 
   const filteredTodos = useMemo(() => {
