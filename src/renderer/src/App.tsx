@@ -29,12 +29,14 @@ function offsetDate(isoDate: string, days: number): string {
   return toISODate(d)
 }
 
+const WEEKDAYS = ['일', '월', '화', '수', '목', '금', '토']
+
 function formatDate(isoDate: string): string {
-  return new Date(isoDate + 'T00:00:00').toLocaleDateString('ko-KR', {
-    month: 'long',
-    day: 'numeric',
-    weekday: 'short',
-  })
+  const d = new Date(isoDate + 'T00:00:00')
+  const month = d.getMonth() + 1
+  const day = d.getDate()
+  const weekday = WEEKDAYS[d.getDay()]
+  return `${month}월 ${day}일 (${weekday})`
 }
 
 export default function App() {
