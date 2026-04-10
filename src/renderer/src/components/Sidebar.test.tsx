@@ -14,7 +14,7 @@ describe('Sidebar', () => {
 
   it('highlights the active filter button', () => {
     render(<Sidebar activeFilter="all" onFilterChange={vi.fn()} />)
-    expect(screen.getByText('전체').closest('button')).toHaveClass('bg-gray-700')
+    expect(screen.getByText('전체').closest('button')).toHaveClass('bg-zinc-800')
   })
 
   it('calls onFilterChange with the correct key when clicked', async () => {

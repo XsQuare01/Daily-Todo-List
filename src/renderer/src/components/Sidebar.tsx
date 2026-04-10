@@ -1,3 +1,5 @@
+import { Calendar, List, Star, CheckCircle } from 'lucide-react'
+import { cn } from '../lib/utils'
 import type { FilterType } from '../types/todo'
 
 interface Props {
@@ -5,30 +7,31 @@ interface Props {
   onFilterChange: (filter: FilterType) => void
 }
 
-const FILTERS: { key: FilterType; label: string; icon: string }[] = [
-  { key: 'today', label: '오늘', icon: '📅' },
-  { key: 'all', label: '전체', icon: '📋' },
-  { key: 'important', label: '중요', icon: '⭐' },
-  { key: 'completed', label: '완료', icon: '✅' },
+const FILTERS: { key: FilterType; label: string; Icon: React.ComponentType<{ size?: number; className?: string }> }[] = [
+  { key: 'today', label: '오늘', Icon: Calendar },
+  { key: 'all', label: '전체', Icon: List },
+  { key: 'important', label: '중요', Icon: Star },
+  { key: 'completed', label: '완료', Icon: CheckCircle },
 ]
 
 export function Sidebar({ activeFilter, onFilterChange }: Props) {
   return (
-    <aside className="w-48 bg-gray-800 border-r border-gray-700 flex flex-col p-3 gap-1">
-      <div className="text-xs font-bold text-blue-400 uppercase tracking-widest px-2 py-2">
+    <aside className="w-48 bg-zinc-900 border-r border-zinc-800/60 flex flex-col p-3 gap-0.5">
+      <div className="text-[10px] font-semibold text-sky-500 uppercase tracking-widest px-3 py-2">
         TODAY
       </div>
-      {FILTERS.map(({ key, label, icon }) => (
+      {FILTERS.map(({ key, label, Icon }) => (
         <button
           key={key}
           onClick={() => onFilterChange(key)}
-          className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-left transition-colors ${
+          className={cn(
+            'flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-left transition-colors active:scale-[0.98]',
             activeFilter === key
-              ? 'bg-gray-700 text-gray-100'
-              : 'text-gray-400 hover:bg-gray-700/50 hover:text-gray-200'
-          }`}
+              ? 'bg-zinc-800 text-zinc-100'
+              : 'text-zinc-500 hover:bg-zinc-800/50 hover:text-zinc-300'
+          )}
         >
-          <span>{icon}</span>
+          <Icon size={14} className="shrink-0" />
           <span>{label}</span>
         </button>
       ))}
