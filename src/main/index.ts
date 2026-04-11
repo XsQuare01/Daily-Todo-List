@@ -1,46 +1,62 @@
-import { app, shell, BrowserWindow, ipcMain, Tray, Menu, nativeImage, screen } from 'electron'
+import { app, shell, BrowserWindow, ipcMain, Tray, Menu, nativeImage, screen, dialog } from 'electron'
 import { get as httpsGet } from 'https'
+import { readFileSync, writeFileSync } from 'fs'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
-import { registerTodosIpc } from './todos-store'
+import { registerTodosIpc, readTodos, writeTodos } from './todos-store'
 
 let tray: Tray | null = null
+let mainWindow: BrowserWindow | null = null
 
-function getBottomRightPosition(width: number, height: number): { x: number; y: number } {
-  const { width: sw, height: sh } = screen.getPrimaryDisplay().workAreaSize
-  return { x: sw - width - 16, y: sh - height - 16 }
+function getWindowPosition(width: number, height: number): { x: number; y: number } {
+  const trayBounds = tray?.getBounds()
+  const display = trayBounds
+    ? screen.getDisplayNearestPoint({ x: trayBounds.x, y: trayBounds.y })
+    : screen.getPrimaryDisplay()
+  const { x: wx, y: wy, width: sw, height: sh } = display.workArea
+  return { x: wx + sw - width - 16, y: wy + sh - height - 16 }
 }
 
-function createTray(mainWindow: BrowserWindow): void {
-  const trayIcon = nativeImage.createFromPath(icon).resize({ width: 16, height: 16 })
-  tray = new Tray(trayIcon)
-  tray.setToolTip('Daily Todo List')
-
-  const contextMenu = Menu.buildFromTemplate([
+function buildTrayMenu(): Menu {
+  return Menu.buildFromTemplate([
     {
       label: '열기',
       click: () => {
-        mainWindow.show()
-        mainWindow.focus()
+        mainWindow?.show()
+        mainWindow?.focus()
+      },
+    },
+    { type: 'separator' },
+    {
+      label: '시작 시 자동 실행',
+      type: 'checkbox',
+      checked: app.getLoginItemSettings().openAtLogin,
+      click: (item) => {
+        app.setLoginItemSettings({ openAtLogin: item.checked })
       },
     },
     { type: 'separator' },
     {
       label: '종료',
-      click: () => {
-        app.quit()
-      },
+      click: () => app.quit(),
     },
   ])
+}
 
-  tray.setContextMenu(contextMenu)
+function createTray(): void {
+  const trayIcon = nativeImage.createFromPath(icon).resize({ width: 16, height: 16 })
+  tray = new Tray(trayIcon)
+  tray.setToolTip('Daily Todo List')
+  tray.setContextMenu(buildTrayMenu())
 
-  // Single click to toggle popup
   tray.on('click', () => {
+    if (!mainWindow) return
     if (mainWindow.isVisible() && mainWindow.isFocused()) {
       mainWindow.hide()
     } else {
+      const { x, y } = getWindowPosition(360, 560)
+      mainWindow.setPosition(x, y)
       mainWindow.show()
       mainWindow.focus()
     }
@@ -50,9 +66,9 @@ function createTray(mainWindow: BrowserWindow): void {
 function createWindow(): void {
   const width = 360
   const height = 560
-  const { x, y } = getBottomRightPosition(width, height)
+  const { x, y } = getWindowPosition(width, height)
 
-  const mainWindow = new BrowserWindow({
+  mainWindow = new BrowserWindow({
     width,
     height,
     x,
@@ -71,19 +87,17 @@ function createWindow(): void {
   })
 
   mainWindow.on('ready-to-show', () => {
-    mainWindow.show()
-    mainWindow.focus()
+    mainWindow?.show()
+    mainWindow?.focus()
   })
 
-  // Hide instead of close
   mainWindow.on('close', (e) => {
     e.preventDefault()
-    mainWindow.hide()
+    mainWindow?.hide()
   })
 
-  // Hide when focus is lost (click outside)
   mainWindow.on('blur', () => {
-    if (!is.dev) mainWindow.hide()
+    if (!is.dev) mainWindow?.hide()
   })
 
   mainWindow.webContents.setWindowOpenHandler((details) => {
@@ -96,8 +110,6 @@ function createWindow(): void {
   } else {
     mainWindow.loadFile(join(__dirname, '../renderer/index.html'))
   }
-
-  createTray(mainWindow)
 }
 
 app.whenReady().then(() => {
@@ -114,6 +126,28 @@ app.whenReady().then(() => {
     win?.hide()
   })
 
+  ipcMain.handle('backup:export', async () => {
+    const { filePath, canceled } = await dialog.showSaveDialog({
+      defaultPath: `todos-backup-${new Date().toISOString().slice(0, 10)}.json`,
+      filters: [{ name: 'JSON', extensions: ['json'] }],
+    })
+    if (canceled || !filePath) return false
+    writeFileSync(filePath, readTodos(), 'utf-8')
+    return true
+  })
+
+  ipcMain.handle('backup:import', async () => {
+    const { filePaths, canceled } = await dialog.showOpenDialog({
+      filters: [{ name: 'JSON', extensions: ['json'] }],
+      properties: ['openFile'],
+    })
+    if (canceled || filePaths.length === 0) return null
+    const json = readFileSync(filePaths[0], 'utf-8')
+    JSON.parse(json) // validate — throws if invalid
+    writeTodos(json)
+    return json
+  })
+
   function nodeGet(url: string): Promise<string> {
     return new Promise((resolve, reject) => {
       httpsGet(url, { rejectUnauthorized: false }, (res) => {
@@ -126,14 +160,12 @@ app.whenReady().then(() => {
   }
 
   ipcMain.handle('date:get-network', async () => {
-    // Primary: worldtimeapi.org
     try {
       const body = await nodeGet('https://worldtimeapi.org/api/timezone/Asia/Seoul')
       const data = JSON.parse(body) as { datetime: string }
       return data.datetime.slice(0, 10)
     } catch { /* try fallback */ }
 
-    // Fallback: timeapi.io
     try {
       const body = await nodeGet('https://timeapi.io/api/time/current/zone?timeZone=Asia/Seoul')
       const data = JSON.parse(body) as { year: number; month: number; day: number }
@@ -145,6 +177,8 @@ app.whenReady().then(() => {
     return null
   })
 
+  // Create tray first so getWindowPosition can use tray bounds (multi-monitor support)
+  createTray()
   createWindow()
 
   app.on('activate', function () {
