@@ -8,6 +8,7 @@ import { registerTodosIpc, readTodos, writeTodos } from './todos-store'
 
 let tray: Tray | null = null
 let mainWindow: BrowserWindow | null = null
+let widgetWindow: BrowserWindow | null = null
 
 function getWindowPosition(width: number, height: number): { x: number; y: number } {
   const trayBounds = tray?.getBounds()
@@ -28,6 +29,18 @@ function buildTrayMenu(): Menu {
       },
     },
     { type: 'separator' },
+    {
+      label: '위젯 표시',
+      type: 'checkbox',
+      checked: widgetWindow?.isVisible() ?? false,
+      click: (item) => {
+        if (item.checked) {
+          widgetWindow?.show()
+        } else {
+          widgetWindow?.hide()
+        }
+      },
+    },
     {
       label: '시작 시 자동 실행',
       type: 'checkbox',
@@ -112,6 +125,46 @@ function createWindow(): void {
   }
 }
 
+function createWidgetWindow(): void {
+  const display = screen.getPrimaryDisplay()
+  const { x: wx, y: wy, width: sw, height: sh } = display.workArea
+  const ww = 240
+  const wh = 340
+
+  widgetWindow = new BrowserWindow({
+    width: ww,
+    height: wh,
+    x: wx + sw - ww - 16,
+    y: wy + sh - wh - 80,
+    frame: false,
+    transparent: true,
+    resizable: false,
+    skipTaskbar: true,
+    alwaysOnTop: true,
+    title: 'Daily Todo Widget',
+    show: true,
+    webPreferences: {
+      preload: join(__dirname, '../preload/index.js'),
+      sandbox: false,
+    },
+  })
+
+  // Don't close, just hide
+  widgetWindow.on('close', (e) => {
+    e.preventDefault()
+    widgetWindow?.hide()
+    tray?.setContextMenu(buildTrayMenu())
+  })
+
+  if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
+    widgetWindow.loadURL(process.env['ELECTRON_RENDERER_URL'] + '?mode=widget')
+  } else {
+    widgetWindow.loadFile(join(__dirname, '../renderer/index.html'), {
+      query: { mode: 'widget' },
+    })
+  }
+}
+
 app.whenReady().then(() => {
   registerTodosIpc()
 
@@ -143,7 +196,7 @@ app.whenReady().then(() => {
     })
     if (canceled || filePaths.length === 0) return null
     const json = readFileSync(filePaths[0], 'utf-8')
-    JSON.parse(json) // validate — throws if invalid
+    JSON.parse(json)
     writeTodos(json)
     return json
   })
@@ -177,9 +230,12 @@ app.whenReady().then(() => {
     return null
   })
 
-  // Create tray first so getWindowPosition can use tray bounds (multi-monitor support)
   createTray()
   createWindow()
+  createWidgetWindow()
+
+  // Refresh tray menu after widget is created
+  tray?.setContextMenu(buildTrayMenu())
 
   app.on('activate', function () {
     if (BrowserWindow.getAllWindows().length === 0) createWindow()

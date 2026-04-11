@@ -9,6 +9,7 @@ declare global {
       getNetworkDate: () => Promise<string | null>
       exportBackup: () => Promise<boolean>
       importBackup: () => Promise<string | null>
+      onTodosUpdated: (callback: (json: string) => void) => void
     }
   }
 }

@@ -7,4 +7,7 @@ contextBridge.exposeInMainWorld('api', {
   getNetworkDate: (): Promise<string | null> => ipcRenderer.invoke('date:get-network'),
   exportBackup: (): Promise<boolean> => ipcRenderer.invoke('backup:export'),
   importBackup: (): Promise<string | null> => ipcRenderer.invoke('backup:import'),
+  onTodosUpdated: (callback: (json: string) => void): void => {
+    ipcRenderer.on('todos:updated', (_event, json: string) => callback(json))
+  },
 })

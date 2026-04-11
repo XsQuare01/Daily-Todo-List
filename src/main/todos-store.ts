@@ -1,4 +1,4 @@
-import { app, ipcMain } from 'electron'
+import { app, ipcMain, BrowserWindow } from 'electron'
 import { readFileSync, writeFileSync, existsSync } from 'fs'
 import { join } from 'path'
 
@@ -20,5 +20,8 @@ export function registerTodosIpc(): void {
   ipcMain.handle('todos:get', () => readTodos())
   ipcMain.handle('todos:save', (_event, json: string) => {
     writeTodos(json)
+    for (const win of BrowserWindow.getAllWindows()) {
+      win.webContents.send('todos:updated', json)
+    }
   })
 }
