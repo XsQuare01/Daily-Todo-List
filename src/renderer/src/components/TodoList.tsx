@@ -1,4 +1,14 @@
 import { Inbox } from 'lucide-react'
+import {
+  DndContext,
+  closestCenter,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from '@dnd-kit/core'
+import { SortableContext, verticalListSortingStrategy, useSortable } from '@dnd-kit/sortable'
+import { CSS } from '@dnd-kit/utilities'
 import { TodoItem } from './TodoItem'
 import type { Todo } from '../types/todo'
 
@@ -8,9 +18,44 @@ interface Props {
   onToggleImportant: (id: string) => void
   onDelete: (id: string) => void
   onUpdateDescription: (id: string, description: string) => void
+  onUpdateDueDate: (id: string, dueDate: string) => void
+  onUpdateTags: (id: string, tags: string[]) => void
+  onReorder: (activeId: string, overId: string) => void
 }
 
-export function TodoList({ todos, onToggleComplete, onToggleImportant, onDelete, onUpdateDescription }: Props) {
+function SortableTodoItem({
+  todo,
+  ...props
+}: Omit<Props, 'todos' | 'onReorder'> & { todo: Todo }) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: todo.id,
+  })
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={{
+        transform: CSS.Transform.toString(transform),
+        transition,
+        opacity: isDragging ? 0.4 : 1,
+      }}
+    >
+      <TodoItem todo={todo} {...props} dragHandleProps={{ ...attributes, ...listeners }} />
+    </div>
+  )
+}
+
+export function TodoList({ todos, onReorder, ...itemProps }: Props) {
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 6 } })
+  )
+
+  function handleDragEnd(event: DragEndEvent) {
+    const { active, over } = event
+    if (!over || active.id === over.id) return
+    onReorder(String(active.id), String(over.id))
+  }
+
   if (todos.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center flex-1 gap-2 text-zinc-600">
@@ -21,17 +66,14 @@ export function TodoList({ todos, onToggleComplete, onToggleImportant, onDelete,
   }
 
   return (
-    <div className="flex-1 overflow-y-auto py-1">
-      {todos.map((todo) => (
-        <TodoItem
-          key={todo.id}
-          todo={todo}
-          onToggleComplete={onToggleComplete}
-          onToggleImportant={onToggleImportant}
-          onDelete={onDelete}
-          onUpdateDescription={onUpdateDescription}
-        />
-      ))}
-    </div>
+    <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+      <SortableContext items={todos.map((t) => t.id)} strategy={verticalListSortingStrategy}>
+        <div className="flex-1 overflow-y-auto py-1">
+          {todos.map((todo) => (
+            <SortableTodoItem key={todo.id} todo={todo} {...itemProps} />
+          ))}
+        </div>
+      </SortableContext>
+    </DndContext>
   )
 }
