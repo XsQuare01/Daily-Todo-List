@@ -7,6 +7,8 @@ declare global {
       saveTodos: (json: string) => Promise<void>
       hideWindow: () => void
       getNetworkDate: () => Promise<string | null>
+      exportBackup: () => Promise<boolean>
+      importBackup: () => Promise<string | null>
     }
   }
 }

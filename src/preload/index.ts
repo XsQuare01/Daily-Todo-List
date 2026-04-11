@@ -5,4 +5,6 @@ contextBridge.exposeInMainWorld('api', {
   saveTodos: (json: string): Promise<void> => ipcRenderer.invoke('todos:save', json),
   hideWindow: (): void => ipcRenderer.send('window:hide'),
   getNetworkDate: (): Promise<string | null> => ipcRenderer.invoke('date:get-network'),
+  exportBackup: (): Promise<boolean> => ipcRenderer.invoke('backup:export'),
+  importBackup: (): Promise<string | null> => ipcRenderer.invoke('backup:import'),
 })
