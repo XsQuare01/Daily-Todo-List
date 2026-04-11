@@ -1,16 +1,20 @@
 import { useState } from 'react'
-import { Star, X, Check, CalendarClock, Tag, GripVertical } from 'lucide-react'
+import { Star, X, Check, CalendarClock, Tag, GripVertical, Play, Pause, Timer, RotateCcw } from 'lucide-react'
 import { cn } from '../lib/utils'
 import type { Todo } from '../types/todo'
 
 interface Props {
   todo: Todo
+  isTimerActive: boolean
+  displayElapsed: number
   onToggleComplete: (id: string) => void
   onToggleImportant: (id: string) => void
   onDelete: (id: string) => void
   onUpdateDescription: (id: string, description: string) => void
   onUpdateDueDate: (id: string, dueDate: string) => void
   onUpdateTags: (id: string, tags: string[]) => void
+  onToggleTimer: (id: string) => void
+  onResetTimer: (id: string) => void
   dragHandleProps?: React.HTMLAttributes<HTMLElement>
 }
 
@@ -24,14 +28,27 @@ function getDday(dueDate: string): string {
   return `D+${Math.abs(diff)}`
 }
 
+function formatElapsed(ms: number): string {
+  const totalSec = Math.floor(ms / 1000)
+  const h = Math.floor(totalSec / 3600)
+  const m = Math.floor((totalSec % 3600) / 60)
+  const s = totalSec % 60
+  if (h > 0) return `${h}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`
+  return `${m}:${String(s).padStart(2, '0')}`
+}
+
 export function TodoItem({
   todo,
+  isTimerActive,
+  displayElapsed,
   onToggleComplete,
   onToggleImportant,
   onDelete,
   onUpdateDescription,
   onUpdateDueDate,
   onUpdateTags,
+  onToggleTimer,
+  onResetTimer,
   dragHandleProps,
 }: Props) {
   const [expanded, setExpanded] = useState(false)
@@ -40,6 +57,7 @@ export function TodoItem({
   const [localTags, setLocalTags] = useState((todo.tags ?? []).join(', '))
 
   const dday = todo.dueDate ? getDday(todo.dueDate) : null
+  const hasElapsed = displayElapsed > 0
 
   return (
     <div className="animate-slide-in">
@@ -93,6 +111,19 @@ export function TodoItem({
                 {dday}
               </span>
             )}
+            {/* Elapsed time badge */}
+            {(hasElapsed || isTimerActive) && !todo.completed && (
+              <span
+                className={cn(
+                  'shrink-0 text-[10px] font-mono tabular-nums px-1.5 py-0.5 rounded-full',
+                  isTimerActive
+                    ? 'text-teal-300 bg-teal-500/15 border border-teal-500/20'
+                    : 'text-zinc-400 bg-white/[0.04]'
+                )}
+              >
+                {formatElapsed(displayElapsed)}
+              </span>
+            )}
           </div>
           {!expanded && (
             <>
@@ -116,6 +147,28 @@ export function TodoItem({
             </>
           )}
         </button>
+
+        {/* Timer play/pause */}
+        {!todo.completed && (
+          <button
+            aria-label={isTimerActive ? '일시정지' : '시작'}
+            onClick={() => onToggleTimer(todo.id)}
+            className={cn(
+              'relative shrink-0 size-6 flex items-center justify-center rounded-full transition-[color,background-color,transform] active:scale-[0.96] after:absolute after:content-[\'\'] after:-inset-2',
+              isTimerActive
+                ? 'text-teal-400 bg-teal-500/15'
+                : hasElapsed
+                  ? 'text-zinc-500 hover:text-teal-400'
+                  : 'opacity-0 group-hover:opacity-100 text-zinc-600 hover:text-teal-400'
+            )}
+          >
+            {isTimerActive ? (
+              <Pause size={11} fill="currentColor" />
+            ) : (
+              <Play size={11} fill="currentColor" className="ml-[1px]" />
+            )}
+          </button>
+        )}
 
         <button
           aria-label="중요"
@@ -169,7 +222,7 @@ export function TodoItem({
                   setLocalDueDate('')
                   onUpdateDueDate(todo.id, '')
                 }}
-                className="text-zinc-700 hover:text-zinc-400"
+                className="text-zinc-500 hover:text-zinc-400"
               >
                 <X size={10} />
               </button>
@@ -196,6 +249,23 @@ export function TodoItem({
               spellCheck={false}
             />
           </div>
+
+          {/* Timer detail row */}
+          {hasElapsed && (
+            <div className="flex items-center gap-1.5">
+              <Timer size={11} className="text-zinc-600 shrink-0" />
+              <span className="text-xs text-zinc-400 tabular-nums font-mono">
+                {formatElapsed(displayElapsed)}
+              </span>
+              <button
+                onClick={() => onResetTimer(todo.id)}
+                aria-label="타이머 초기화"
+                className="text-zinc-600 hover:text-zinc-400 ml-auto"
+              >
+                <RotateCcw size={10} />
+              </button>
+            </div>
+          )}
         </div>
       )}
     </div>

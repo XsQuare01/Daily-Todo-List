@@ -14,17 +14,23 @@ import type { Todo } from '../types/todo'
 
 interface Props {
   todos: Todo[]
+  activeTimerId: string | null
+  getDisplayElapsed: (todo: Todo) => number
   onToggleComplete: (id: string) => void
   onToggleImportant: (id: string) => void
   onDelete: (id: string) => void
   onUpdateDescription: (id: string, description: string) => void
   onUpdateDueDate: (id: string, dueDate: string) => void
   onUpdateTags: (id: string, tags: string[]) => void
+  onToggleTimer: (id: string) => void
+  onResetTimer: (id: string) => void
   onReorder: (activeId: string, overId: string) => void
 }
 
 function SortableTodoItem({
   todo,
+  activeTimerId,
+  getDisplayElapsed,
   ...props
 }: Omit<Props, 'todos' | 'onReorder'> & { todo: Todo }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
@@ -40,7 +46,13 @@ function SortableTodoItem({
         opacity: isDragging ? 0.35 : 1,
       }}
     >
-      <TodoItem todo={todo} {...props} dragHandleProps={{ ...attributes, ...listeners }} />
+      <TodoItem
+        todo={todo}
+        isTimerActive={activeTimerId === todo.id}
+        displayElapsed={getDisplayElapsed(todo)}
+        {...props}
+        dragHandleProps={{ ...attributes, ...listeners }}
+      />
     </div>
   )
 }

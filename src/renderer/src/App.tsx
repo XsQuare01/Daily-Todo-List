@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo, useEffect, useCallback, useRef } from 'react'
 import {
   X,
   Calendar,
@@ -71,9 +71,58 @@ export default function App() {
     updateDescription,
     updateDueDate,
     updateTags,
+    updateElapsed,
     reorderTodos,
     loadTodos,
   } = useTodos()
+
+  // ── Stopwatch state ──
+  const [activeTimerId, setActiveTimerId] = useState<string | null>(null)
+  const sessionStartRef = useRef(0)
+  const [, tick] = useState(0)
+
+  // Re-render every second while a timer is active
+  useEffect(() => {
+    if (!activeTimerId) return
+    const id = setInterval(() => tick((n) => n + 1), 1000)
+    return () => clearInterval(id)
+  }, [activeTimerId])
+
+  const pauseActiveTimer = useCallback(() => {
+    if (!activeTimerId) return
+    const delta = Date.now() - sessionStartRef.current
+    const todo = todos.find((t) => t.id === activeTimerId)
+    updateElapsed(activeTimerId, (todo?.elapsedMs ?? 0) + delta)
+    setActiveTimerId(null)
+  }, [activeTimerId, todos, updateElapsed])
+
+  function toggleTimer(todoId: string) {
+    if (activeTimerId === todoId) {
+      pauseActiveTimer()
+    } else {
+      if (activeTimerId) pauseActiveTimer()
+      setActiveTimerId(todoId)
+      sessionStartRef.current = Date.now()
+    }
+  }
+
+  function handleToggleComplete(id: string) {
+    if (activeTimerId === id) pauseActiveTimer()
+    toggleComplete(id)
+  }
+
+  function handleResetTimer(id: string) {
+    if (activeTimerId === id) setActiveTimerId(null)
+    updateElapsed(id, 0)
+  }
+
+  function getDisplayElapsed(todo: typeof todos[number]): number {
+    const base = todo.elapsedMs ?? 0
+    if (activeTimerId === todo.id) {
+      return base + (Date.now() - sessionStartRef.current)
+    }
+    return base
+  }
 
   const [today, setToday] = useState(getKSTToday)
   const isToday = selectedDate === today
@@ -251,12 +300,16 @@ export default function App() {
       {/* Todo list */}
       <TodoList
         todos={filteredTodos}
-        onToggleComplete={toggleComplete}
+        activeTimerId={activeTimerId}
+        getDisplayElapsed={getDisplayElapsed}
+        onToggleComplete={handleToggleComplete}
         onToggleImportant={toggleImportant}
         onDelete={deleteTodo}
         onUpdateDescription={updateDescription}
         onUpdateDueDate={updateDueDate}
         onUpdateTags={updateTags}
+        onToggleTimer={toggleTimer}
+        onResetTimer={handleResetTimer}
         onReorder={reorderTodos}
       />
 

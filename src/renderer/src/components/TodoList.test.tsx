@@ -9,12 +9,16 @@ const todos: Todo[] = [
 ]
 
 const defaultProps = {
+  activeTimerId: null,
+  getDisplayElapsed: () => 0,
   onToggleComplete: vi.fn(),
   onToggleImportant: vi.fn(),
   onDelete: vi.fn(),
   onUpdateDescription: vi.fn(),
   onUpdateDueDate: vi.fn(),
   onUpdateTags: vi.fn(),
+  onToggleTimer: vi.fn(),
+  onResetTimer: vi.fn(),
   onReorder: vi.fn(),
 }
 

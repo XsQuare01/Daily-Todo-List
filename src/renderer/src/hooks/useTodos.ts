@@ -59,6 +59,10 @@ export function useTodos() {
     save(todos.map((t) => (t.id === id ? { ...t, tags: tags.length > 0 ? tags : undefined } : t)))
   }
 
+  function updateElapsed(id: string, elapsedMs: number) {
+    save(todos.map((t) => (t.id === id ? { ...t, elapsedMs: elapsedMs > 0 ? elapsedMs : undefined } : t)))
+  }
+
   function reorderTodos(activeId: string, overId: string) {
     const oldIndex = todos.findIndex((t) => t.id === activeId)
     const newIndex = todos.findIndex((t) => t.id === overId)
@@ -87,6 +91,7 @@ export function useTodos() {
     updateDescription,
     updateDueDate,
     updateTags,
+    updateElapsed,
     reorderTodos,
     loadTodos,
   }

@@ -13,12 +13,16 @@ const todo: Todo = {
 }
 
 const defaultProps = {
+  isTimerActive: false,
+  displayElapsed: 0,
   onToggleComplete: vi.fn(),
   onToggleImportant: vi.fn(),
   onDelete: vi.fn(),
   onUpdateDescription: vi.fn(),
   onUpdateDueDate: vi.fn(),
   onUpdateTags: vi.fn(),
+  onToggleTimer: vi.fn(),
+  onResetTimer: vi.fn(),
 }
 
 describe('TodoItem', () => {
