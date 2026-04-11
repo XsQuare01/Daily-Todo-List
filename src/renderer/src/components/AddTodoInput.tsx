@@ -3,15 +3,30 @@ import { Plus } from 'lucide-react'
 import { cn } from '../lib/utils'
 
 interface Props {
-  onAdd: (title: string) => void
+  onAdd: (title: string, tags?: string[]) => void
+}
+
+function parseInput(raw: string): { title: string; tags: string[] } {
+  const tags: string[] = []
+  const title = raw
+    .replace(/#([^\s#]+)/g, (_, tag: string) => {
+      tags.push(tag)
+      return ''
+    })
+    .replace(/\s+/g, ' ')
+    .trim()
+  return { title, tags }
 }
 
 export function AddTodoInput({ onAdd }: Props) {
   const [value, setValue] = useState('')
 
   function handleAdd() {
-    if (value.trim()) {
-      onAdd(value.trim())
+    const trimmed = value.trim()
+    if (!trimmed) return
+    const { title, tags } = parseInput(trimmed)
+    if (title) {
+      onAdd(title, tags.length > 0 ? tags : undefined)
       setValue('')
     }
   }
@@ -24,7 +39,7 @@ export function AddTodoInput({ onAdd }: Props) {
     <div className="flex items-center gap-2 px-4 py-3 border-t border-zinc-800/60">
       <input
         className="flex-1 bg-transparent text-zinc-300 placeholder-zinc-600 outline-none text-base"
-        placeholder="할 일 추가..."
+        placeholder="할 일 추가... (#태그)"
         spellCheck={false}
         value={value}
         onChange={(e) => setValue(e.target.value)}
