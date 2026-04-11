@@ -67,7 +67,9 @@ function createTray(): void {
     if (!mainWindow) return
     if (mainWindow.isVisible() && mainWindow.isFocused()) {
       mainWindow.hide()
+      widgetWindow?.show()
     } else {
+      widgetWindow?.hide()
       const { x, y } = getWindowPosition(360, 560)
       mainWindow.setPosition(x, y)
       mainWindow.show()
@@ -102,15 +104,20 @@ function createWindow(): void {
   mainWindow.on('ready-to-show', () => {
     mainWindow?.show()
     mainWindow?.focus()
+    widgetWindow?.hide()
   })
 
   mainWindow.on('close', (e) => {
     e.preventDefault()
     mainWindow?.hide()
+    widgetWindow?.show()
   })
 
   mainWindow.on('blur', () => {
-    if (!is.dev) mainWindow?.hide()
+    if (!is.dev) {
+      mainWindow?.hide()
+      widgetWindow?.show()
+    }
   })
 
   mainWindow.webContents.setWindowOpenHandler((details) => {
@@ -128,8 +135,8 @@ function createWindow(): void {
 function createWidgetWindow(): void {
   const display = screen.getPrimaryDisplay()
   const { x: wx, y: wy, width: sw, height: sh } = display.workArea
-  const ww = 240
-  const wh = 340
+  const ww = 320
+  const wh = 480
 
   widgetWindow = new BrowserWindow({
     width: ww,
