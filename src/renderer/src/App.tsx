@@ -132,7 +132,7 @@ export default function App() {
         className="flex items-center gap-2 px-4 py-3 bg-white/[0.02] border-b border-white/[0.04] shrink-0"
       >
         <div className="flex-1 min-w-0">
-          <span className="text-sm font-semibold text-zinc-200 block leading-none tracking-tight">
+          <span className="text-sm font-semibold text-zinc-200 block leading-none tracking-tight text-balance">
             Daily Todo
           </span>
           <span className="text-[11px] text-zinc-500 tabular-nums tracking-wide mt-0.5 block">
@@ -146,7 +146,7 @@ export default function App() {
           onClick={() => window.api.exportBackup()}
           aria-label="내보내기"
           title="백업 내보내기"
-          className="size-6 flex items-center justify-center rounded-md text-zinc-600 hover:text-teal-400 hover:bg-white/[0.04] active:scale-90"
+          className="relative size-6 flex items-center justify-center rounded-md text-zinc-600 hover:text-teal-400 hover:bg-white/[0.04] active:scale-[0.96] after:absolute after:content-[''] after:-inset-2"
         >
           <Download size={12} />
         </button>
@@ -155,7 +155,7 @@ export default function App() {
           onClick={handleImport}
           aria-label="가져오기"
           title="백업 가져오기"
-          className="size-6 flex items-center justify-center rounded-md text-zinc-600 hover:text-teal-400 hover:bg-white/[0.04] active:scale-90"
+          className="relative size-6 flex items-center justify-center rounded-md text-zinc-600 hover:text-teal-400 hover:bg-white/[0.04] active:scale-[0.96] after:absolute after:content-[''] after:-inset-2"
         >
           <Upload size={12} />
         </button>
@@ -164,7 +164,7 @@ export default function App() {
           style={noDrag}
           onClick={() => window.api.hideWindow()}
           aria-label="닫기"
-          className="size-6 flex items-center justify-center rounded-md text-zinc-600 hover:text-red-400 hover:bg-white/[0.04] active:scale-90"
+          className="relative size-6 flex items-center justify-center rounded-md text-zinc-600 hover:text-red-400 hover:bg-white/[0.04] active:scale-[0.96] after:absolute after:content-[''] after:-inset-2"
         >
           <X size={12} />
         </button>
@@ -177,7 +177,7 @@ export default function App() {
             key={key}
             onClick={() => setActiveFilter(key)}
             className={cn(
-              'flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-sm transition-all',
+              'flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-sm transition-colors',
               activeFilter === key
                 ? 'bg-white/[0.07] text-zinc-100 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]'
                 : 'text-zinc-500 hover:text-zinc-300 hover:bg-white/[0.03]'
@@ -194,7 +194,7 @@ export default function App() {
         <div className="flex items-center gap-2 px-3 py-2 border-b border-white/[0.04] shrink-0">
           <button
             onClick={() => setSelectedDate(offsetDate(selectedDate, -1))}
-            className="size-7 flex items-center justify-center rounded-md text-zinc-500 hover:text-zinc-200 hover:bg-white/[0.05] active:scale-90"
+            className="size-7 flex items-center justify-center rounded-md text-zinc-500 hover:text-zinc-200 hover:bg-white/[0.05] active:scale-[0.96]"
           >
             <ChevronLeft size={15} />
           </button>
@@ -217,7 +217,7 @@ export default function App() {
 
           <button
             onClick={() => setSelectedDate(offsetDate(selectedDate, 1))}
-            className="size-7 flex items-center justify-center rounded-md text-zinc-500 hover:text-zinc-200 hover:bg-white/[0.05] active:scale-90"
+            className="size-7 flex items-center justify-center rounded-md text-zinc-500 hover:text-zinc-200 hover:bg-white/[0.05] active:scale-[0.96]"
           >
             <ChevronRight size={15} />
           </button>
@@ -235,7 +235,7 @@ export default function App() {
                 key={tag}
                 onClick={() => setActiveTag(activeTag === tag ? null : tag)}
                 className={cn(
-                  'text-xs px-2 py-1 rounded-full border transition-all',
+                  'text-xs px-2 py-1 rounded-full border transition-colors',
                   activeTag === tag
                     ? 'bg-violet-500/20 text-violet-300 border-violet-500/30'
                     : 'bg-white/[0.03] text-zinc-400 border-white/[0.06] hover:text-zinc-200 hover:border-white/[0.1]'

@@ -59,7 +59,7 @@ export function TodoItem({
           aria-checked={todo.completed}
           onClick={() => onToggleComplete(todo.id)}
           className={cn(
-            'shrink-0 size-[18px] rounded-full border-[1.5px] transition-all flex items-center justify-center active:scale-[0.85]',
+            'shrink-0 size-[18px] rounded-full border-[1.5px] transition-[color,background-color,border-color,box-shadow,transform] flex items-center justify-center active:scale-[0.96]',
             todo.completed
               ? 'bg-teal-500 border-teal-500 shadow-[0_0_8px_rgba(20,184,166,0.3)]'
               : 'border-zinc-600 hover:border-teal-500/50 bg-transparent'
@@ -121,7 +121,7 @@ export function TodoItem({
           aria-label="중요"
           onClick={() => onToggleImportant(todo.id)}
           className={cn(
-            'shrink-0 size-6 flex items-center justify-center rounded-full transition-all active:scale-[0.85]',
+            'relative shrink-0 size-6 flex items-center justify-center rounded-full transition-[color,background-color,transform] active:scale-[0.96] after:absolute after:content-[\'\'] after:-inset-2',
             todo.important
               ? 'text-amber-400 bg-amber-400/10'
               : 'opacity-0 group-hover:opacity-100 text-zinc-600 hover:text-amber-400/70'
@@ -133,7 +133,7 @@ export function TodoItem({
         <button
           aria-label="삭제"
           onClick={() => onDelete(todo.id)}
-          className="shrink-0 size-6 flex items-center justify-center rounded-full opacity-0 group-hover:opacity-100 text-zinc-600 hover:text-red-400 hover:bg-red-500/10 transition-all active:scale-[0.85]"
+          className="relative shrink-0 size-6 flex items-center justify-center rounded-full opacity-0 group-hover:opacity-100 text-zinc-600 hover:text-red-400 hover:bg-red-500/10 transition-[color,background-color,opacity,transform] active:scale-[0.96] after:absolute after:content-[''] after:-inset-2"
         >
           <X size={12} />
         </button>
