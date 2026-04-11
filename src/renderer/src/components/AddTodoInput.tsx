@@ -51,7 +51,7 @@ export function AddTodoInput({ onAdd }: Props) {
         className={cn(
           'flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-lg active:scale-[0.96]',
           'bg-teal-500 text-white hover:bg-teal-400 glow-teal',
-          'disabled:opacity-20 disabled:cursor-not-allowed disabled:active:scale-100 disabled:shadow-none'
+          'disabled:opacity-40 disabled:cursor-not-allowed disabled:active:scale-100 disabled:shadow-none'
         )}
       >
         <Plus size={12} />

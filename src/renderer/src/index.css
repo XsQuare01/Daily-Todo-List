@@ -83,6 +83,18 @@ textarea {
   transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+/* ── Focus-visible ring for keyboard nav ── */
+:focus-visible {
+  outline: 2px solid rgba(20, 184, 166, 0.5);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Suppress outline on mouse click, keep on keyboard */
+:focus:not(:focus-visible) {
+  outline: none;
+}
+
 /* ── Subtle entrance animation for todo items ── */
 @keyframes slide-in {
   from {
@@ -96,4 +108,33 @@ textarea {
 }
 .animate-slide-in {
   animation: slide-in 0.2s ease-out both;
+}
+
+/* ── Exit animation (faster than enter) ── */
+@keyframes slide-out {
+  to {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+}
+.animate-slide-out {
+  animation: slide-out 0.12s ease-in both;
+}
+
+/* ── Reduced motion: respect user preference ── */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  .animate-slide-in,
+  .animate-slide-out {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
 }

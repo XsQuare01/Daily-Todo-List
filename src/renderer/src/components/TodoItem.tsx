@@ -144,7 +144,7 @@ export function TodoItem({
           <textarea
             autoFocus
             rows={2}
-            className="w-full bg-white/[0.02] rounded-lg px-3 py-2 text-zinc-400 text-sm resize-none outline-none placeholder-zinc-700 leading-relaxed border border-white/[0.04] focus:border-teal-500/20"
+            className="w-full bg-white/[0.02] rounded-lg px-3 py-2 text-zinc-400 text-sm resize-none outline-none placeholder-zinc-500 leading-relaxed border border-white/[0.04] focus:border-teal-500/20"
             placeholder="메모 추가..."
             spellCheck={false}
             value={localDesc}
@@ -192,7 +192,7 @@ export function TodoItem({
                     .filter(Boolean)
                 )
               }
-              className="flex-1 bg-transparent text-zinc-400 text-xs outline-none placeholder-zinc-700"
+              className="flex-1 bg-transparent text-zinc-400 text-xs outline-none placeholder-zinc-500"
               spellCheck={false}
             />
           </div>
