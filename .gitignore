@@ -4,3 +4,8 @@ out
 .DS_Store
 .eslintcache
 *.log*
+
+# Claude Code / oh-my-claudecode
+.claude/
+.omc/
+.superpowers/
