@@ -23,13 +23,14 @@ export function useTodos() {
     window.api.saveTodos(JSON.stringify(updated))
   }
 
-  function addTodo(title: string, date?: string) {
+  function addTodo(title: string, date?: string, tags?: string[]) {
     const newTodo: Todo = {
       id: crypto.randomUUID(),
       title: title.trim(),
       completed: false,
       important: false,
       createdAt: date ?? today(),
+      ...(tags && tags.length > 0 ? { tags } : {}),
     }
     save([...todos, newTodo])
   }
@@ -50,5 +51,43 @@ export function useTodos() {
     save(todos.map((t) => (t.id === id ? { ...t, description } : t)))
   }
 
-  return { todos, addTodo, toggleComplete, toggleImportant, deleteTodo, updateDescription }
+  function updateDueDate(id: string, dueDate: string) {
+    save(todos.map((t) => (t.id === id ? { ...t, dueDate: dueDate || undefined } : t)))
+  }
+
+  function updateTags(id: string, tags: string[]) {
+    save(todos.map((t) => (t.id === id ? { ...t, tags: tags.length > 0 ? tags : undefined } : t)))
+  }
+
+  function reorderTodos(activeId: string, overId: string) {
+    const oldIndex = todos.findIndex((t) => t.id === activeId)
+    const newIndex = todos.findIndex((t) => t.id === overId)
+    if (oldIndex === -1 || newIndex === -1) return
+    const reordered = [...todos]
+    const [item] = reordered.splice(oldIndex, 1)
+    reordered.splice(newIndex, 0, item)
+    save(reordered)
+  }
+
+  function loadTodos(json: string) {
+    try {
+      const parsed = JSON.parse(json)
+      setTodos(parsed)
+    } catch {
+      /* keep existing */
+    }
+  }
+
+  return {
+    todos,
+    addTodo,
+    toggleComplete,
+    toggleImportant,
+    deleteTodo,
+    updateDescription,
+    updateDueDate,
+    updateTags,
+    reorderTodos,
+    loadTodos,
+  }
 }

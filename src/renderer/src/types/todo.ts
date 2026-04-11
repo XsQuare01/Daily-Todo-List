@@ -5,6 +5,8 @@ export interface Todo {
   completed: boolean
   important: boolean
   createdAt: string // ISO date string, e.g. "2026-04-09"
+  dueDate?: string  // ISO date string, e.g. "2026-04-15"
+  tags?: string[]   // e.g. ["work", "urgent"]
 }
 
-export type FilterType = 'today' | 'all' | 'important' | 'completed'
+export type FilterType = 'today' | 'all' | 'important' | 'completed' | 'tag'

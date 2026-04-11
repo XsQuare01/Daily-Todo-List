@@ -13,6 +13,9 @@ const defaultProps = {
   onToggleImportant: vi.fn(),
   onDelete: vi.fn(),
   onUpdateDescription: vi.fn(),
+  onUpdateDueDate: vi.fn(),
+  onUpdateTags: vi.fn(),
+  onReorder: vi.fn(),
 }
 
 describe('TodoList', () => {
