@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import type { Todo } from '../types/todo'
+import type { Todo, Priority, Subtask } from '../types/todo'
 
 function today(): string {
   return new Date().toISOString().slice(0, 10)
@@ -63,6 +63,35 @@ export function useTodos() {
     save(todos.map((t) => (t.id === id ? { ...t, elapsedMs: elapsedMs > 0 ? elapsedMs : undefined } : t)))
   }
 
+  function updatePriority(id: string, priority: Priority | undefined) {
+    save(todos.map((t) => (t.id === id ? { ...t, priority } : t)))
+  }
+
+  function addSubtask(id: string, title: string) {
+    const sub: Subtask = { id: crypto.randomUUID(), title: title.trim(), completed: false }
+    save(todos.map((t) => (t.id === id ? { ...t, subtasks: [...(t.subtasks ?? []), sub] } : t)))
+  }
+
+  function toggleSubtask(id: string, subtaskId: string) {
+    save(
+      todos.map((t) =>
+        t.id === id
+          ? { ...t, subtasks: t.subtasks?.map((s) => (s.id === subtaskId ? { ...s, completed: !s.completed } : s)) }
+          : t
+      )
+    )
+  }
+
+  function deleteSubtask(id: string, subtaskId: string) {
+    save(
+      todos.map((t) => {
+        if (t.id !== id) return t
+        const filtered = t.subtasks?.filter((s) => s.id !== subtaskId)
+        return { ...t, subtasks: filtered && filtered.length > 0 ? filtered : undefined }
+      })
+    )
+  }
+
   function reorderTodos(activeId: string, overId: string) {
     const oldIndex = todos.findIndex((t) => t.id === activeId)
     const newIndex = todos.findIndex((t) => t.id === overId)
@@ -92,6 +121,10 @@ export function useTodos() {
     updateDueDate,
     updateTags,
     updateElapsed,
+    updatePriority,
+    addSubtask,
+    toggleSubtask,
+    deleteSubtask,
     reorderTodos,
     loadTodos,
   }

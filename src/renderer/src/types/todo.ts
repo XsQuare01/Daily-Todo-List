@@ -1,3 +1,11 @@
+export interface Subtask {
+  id: string
+  title: string
+  completed: boolean
+}
+
+export type Priority = 'high' | 'medium' | 'low'
+
 export interface Todo {
   id: string
   title: string
@@ -8,6 +16,8 @@ export interface Todo {
   dueDate?: string    // ISO date string, e.g. "2026-04-15"
   tags?: string[]     // e.g. ["work", "urgent"]
   elapsedMs?: number  // total elapsed milliseconds from stopwatch
+  priority?: Priority
+  subtasks?: Subtask[]
 }
 
 export type FilterType = 'today' | 'all' | 'important' | 'completed' | 'tag'

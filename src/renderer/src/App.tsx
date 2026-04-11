@@ -72,6 +72,10 @@ export default function App() {
     updateDueDate,
     updateTags,
     updateElapsed,
+    updatePriority,
+    addSubtask,
+    toggleSubtask,
+    deleteSubtask,
     reorderTodos,
     loadTodos,
   } = useTodos()
@@ -310,6 +314,10 @@ export default function App() {
         onUpdateTags={updateTags}
         onToggleTimer={toggleTimer}
         onResetTimer={handleResetTimer}
+        onUpdatePriority={updatePriority}
+        onAddSubtask={addSubtask}
+        onToggleSubtask={toggleSubtask}
+        onDeleteSubtask={deleteSubtask}
         onReorder={reorderTodos}
       />
 

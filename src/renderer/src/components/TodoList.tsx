@@ -10,7 +10,7 @@ import {
 import { SortableContext, verticalListSortingStrategy, useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { TodoItem } from './TodoItem'
-import type { Todo } from '../types/todo'
+import type { Todo, Priority } from '../types/todo'
 
 interface Props {
   todos: Todo[]
@@ -24,6 +24,10 @@ interface Props {
   onUpdateTags: (id: string, tags: string[]) => void
   onToggleTimer: (id: string) => void
   onResetTimer: (id: string) => void
+  onUpdatePriority: (id: string, priority: Priority | undefined) => void
+  onAddSubtask: (id: string, title: string) => void
+  onToggleSubtask: (id: string, subtaskId: string) => void
+  onDeleteSubtask: (id: string, subtaskId: string) => void
   onReorder: (activeId: string, overId: string) => void
 }
 

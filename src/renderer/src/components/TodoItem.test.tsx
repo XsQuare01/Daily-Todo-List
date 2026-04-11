@@ -23,6 +23,10 @@ const defaultProps = {
   onUpdateTags: vi.fn(),
   onToggleTimer: vi.fn(),
   onResetTimer: vi.fn(),
+  onUpdatePriority: vi.fn(),
+  onAddSubtask: vi.fn(),
+  onToggleSubtask: vi.fn(),
+  onDeleteSubtask: vi.fn(),
 }
 
 describe('TodoItem', () => {

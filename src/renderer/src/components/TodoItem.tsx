@@ -1,7 +1,10 @@
-import { useState } from 'react'
-import { Star, X, Check, CalendarClock, Tag, GripVertical, Play, Pause, Timer, RotateCcw } from 'lucide-react'
+import { useState, KeyboardEvent } from 'react'
+import {
+  Star, X, Check, CalendarClock, Tag, GripVertical,
+  Play, Pause, Timer, RotateCcw, Plus, Circle, Trash2,
+} from 'lucide-react'
 import { cn } from '../lib/utils'
-import type { Todo } from '../types/todo'
+import type { Todo, Priority } from '../types/todo'
 
 interface Props {
   todo: Todo
@@ -15,6 +18,10 @@ interface Props {
   onUpdateTags: (id: string, tags: string[]) => void
   onToggleTimer: (id: string) => void
   onResetTimer: (id: string) => void
+  onUpdatePriority: (id: string, priority: Priority | undefined) => void
+  onAddSubtask: (id: string, title: string) => void
+  onToggleSubtask: (id: string, subtaskId: string) => void
+  onDeleteSubtask: (id: string, subtaskId: string) => void
   dragHandleProps?: React.HTMLAttributes<HTMLElement>
 }
 
@@ -37,6 +44,12 @@ function formatElapsed(ms: number): string {
   return `${m}:${String(s).padStart(2, '0')}`
 }
 
+const PRIORITY_CONFIG: Record<Priority, { label: string; dot: string; badge: string }> = {
+  high:   { label: '상', dot: 'bg-red-400',   badge: 'text-red-300 bg-red-500/15 border-red-500/20' },
+  medium: { label: '중', dot: 'bg-amber-400', badge: 'text-amber-300 bg-amber-500/15 border-amber-500/20' },
+  low:    { label: '하', dot: 'bg-blue-400',  badge: 'text-blue-300 bg-blue-500/15 border-blue-500/20' },
+}
+
 export function TodoItem({
   todo,
   isTimerActive,
@@ -49,15 +62,33 @@ export function TodoItem({
   onUpdateTags,
   onToggleTimer,
   onResetTimer,
+  onUpdatePriority,
+  onAddSubtask,
+  onToggleSubtask,
+  onDeleteSubtask,
   dragHandleProps,
 }: Props) {
   const [expanded, setExpanded] = useState(false)
   const [localDesc, setLocalDesc] = useState(todo.description ?? '')
   const [localDueDate, setLocalDueDate] = useState(todo.dueDate ?? '')
   const [localTags, setLocalTags] = useState((todo.tags ?? []).join(', '))
+  const [subtaskInput, setSubtaskInput] = useState('')
 
   const dday = todo.dueDate ? getDday(todo.dueDate) : null
   const hasElapsed = displayElapsed > 0
+  const subtasks = todo.subtasks ?? []
+  const doneCount = subtasks.filter((s) => s.completed).length
+  const hasSubtasks = subtasks.length > 0
+
+  function handleAddSubtask() {
+    if (!subtaskInput.trim()) return
+    onAddSubtask(todo.id, subtaskInput.trim())
+    setSubtaskInput('')
+  }
+
+  function handleSubtaskKeyDown(e: KeyboardEvent<HTMLInputElement>) {
+    if (e.key === 'Enter') handleAddSubtask()
+  }
 
   return (
     <div className="animate-slide-in">
@@ -89,6 +120,10 @@ export function TodoItem({
         {/* Title — click to toggle expanded */}
         <button onClick={() => setExpanded((v) => !v)} className="flex-1 text-left min-w-0">
           <div className="flex items-center gap-1.5 min-w-0">
+            {/* Priority dot */}
+            {todo.priority && !todo.completed && (
+              <span className={cn('shrink-0 size-[6px] rounded-full', PRIORITY_CONFIG[todo.priority].dot)} />
+            )}
             <span
               className={cn(
                 'text-[15px] leading-relaxed truncate tracking-[-0.01em]',
@@ -111,7 +146,6 @@ export function TodoItem({
                 {dday}
               </span>
             )}
-            {/* Elapsed time badge */}
             {(hasElapsed || isTimerActive) && !todo.completed && (
               <span
                 className={cn(
@@ -125,21 +159,32 @@ export function TodoItem({
               </span>
             )}
           </div>
+
+          {/* Collapsed preview row */}
           {!expanded && (
             <>
-              {todo.tags && todo.tags.length > 0 && (
+              {/* Subtask progress */}
+              {hasSubtasks && (
+                <div className="flex items-center gap-2 mt-1">
+                  <div className="flex-1 h-[3px] rounded-full bg-white/[0.04] overflow-hidden max-w-[80px]">
+                    <div
+                      className="h-full rounded-full bg-teal-500/60 transition-all"
+                      style={{ width: `${(doneCount / subtasks.length) * 100}%` }}
+                    />
+                  </div>
+                  <span className="text-[10px] text-zinc-500 tabular-nums">{doneCount}/{subtasks.length}</span>
+                </div>
+              )}
+              {todo.tags && todo.tags.length > 0 && !hasSubtasks && (
                 <div className="flex gap-1.5 flex-wrap mt-1">
                   {todo.tags.slice(0, 4).map((tag) => (
-                    <span
-                      key={tag}
-                      className="text-[10px] text-violet-400/80 bg-violet-500/8 px-1.5 py-0.5 rounded-full"
-                    >
+                    <span key={tag} className="text-[10px] text-violet-400/80 bg-violet-500/8 px-1.5 py-0.5 rounded-full">
                       #{tag}
                     </span>
                   ))}
                 </div>
               )}
-              {todo.description && !(todo.tags && todo.tags.length > 0) && (
+              {todo.description && !hasSubtasks && !(todo.tags && todo.tags.length > 0) && (
                 <span className="text-[13px] text-zinc-600 truncate block leading-tight mt-0.5">
                   {todo.description}
                 </span>
@@ -192,8 +237,10 @@ export function TodoItem({
         </button>
       </div>
 
+      {/* ── Expanded panel ── */}
       {expanded && (
         <div className="px-4 pb-3 pl-[60px] space-y-2.5">
+          {/* Description */}
           <textarea
             autoFocus
             rows={2}
@@ -205,6 +252,32 @@ export function TodoItem({
             onBlur={() => onUpdateDescription(todo.id, localDesc)}
           />
 
+          {/* Priority selector */}
+          <div className="flex items-center gap-1.5">
+            <Circle size={11} className="text-zinc-600 shrink-0" />
+            <span className="text-xs text-zinc-500 mr-1">우선순위</span>
+            {(['high', 'medium', 'low'] as Priority[]).map((p) => {
+              const cfg = PRIORITY_CONFIG[p]
+              const active = todo.priority === p
+              return (
+                <button
+                  key={p}
+                  onClick={() => onUpdatePriority(todo.id, active ? undefined : p)}
+                  className={cn(
+                    'text-[10px] px-2 py-0.5 rounded-full border transition-colors',
+                    active
+                      ? cfg.badge + ' border'
+                      : 'text-zinc-500 border-white/[0.06] hover:border-white/[0.12]'
+                  )}
+                >
+                  <span className={cn('inline-block size-[5px] rounded-full mr-1 align-middle', active ? cfg.dot : 'bg-zinc-600')} />
+                  {cfg.label}
+                </button>
+              )
+            })}
+          </div>
+
+          {/* Due date */}
           <div className="flex items-center gap-1.5">
             <CalendarClock size={11} className="text-zinc-600 shrink-0" />
             <input
@@ -218,10 +291,7 @@ export function TodoItem({
             />
             {localDueDate && (
               <button
-                onClick={() => {
-                  setLocalDueDate('')
-                  onUpdateDueDate(todo.id, '')
-                }}
+                onClick={() => { setLocalDueDate(''); onUpdateDueDate(todo.id, '') }}
                 className="text-zinc-500 hover:text-zinc-400"
               >
                 <X size={10} />
@@ -229,6 +299,7 @@ export function TodoItem({
             )}
           </div>
 
+          {/* Tags */}
           <div className="flex items-center gap-1.5">
             <Tag size={11} className="text-zinc-600 shrink-0" />
             <input
@@ -237,20 +308,14 @@ export function TodoItem({
               value={localTags}
               onChange={(e) => setLocalTags(e.target.value)}
               onBlur={() =>
-                onUpdateTags(
-                  todo.id,
-                  localTags
-                    .split(',')
-                    .map((s) => s.trim())
-                    .filter(Boolean)
-                )
+                onUpdateTags(todo.id, localTags.split(',').map((s) => s.trim()).filter(Boolean))
               }
               className="flex-1 bg-transparent text-zinc-400 text-xs outline-none placeholder-zinc-500"
               spellCheck={false}
             />
           </div>
 
-          {/* Timer detail row */}
+          {/* Timer detail */}
           {hasElapsed && (
             <div className="flex items-center gap-1.5">
               <Timer size={11} className="text-zinc-600 shrink-0" />
@@ -266,6 +331,67 @@ export function TodoItem({
               </button>
             </div>
           )}
+
+          {/* ── Subtasks ── */}
+          <div className="pt-1 border-t border-white/[0.04]">
+            <div className="flex items-center gap-1.5 mb-2">
+              <span className="text-[11px] text-zinc-500 font-medium">하위 항목</span>
+              {hasSubtasks && (
+                <span className="text-[10px] text-zinc-600 tabular-nums">{doneCount}/{subtasks.length}</span>
+              )}
+            </div>
+
+            {/* Subtask list */}
+            {subtasks.map((sub) => (
+              <div key={sub.id} className="flex items-center gap-2 py-1 group/sub">
+                <button
+                  onClick={() => onToggleSubtask(todo.id, sub.id)}
+                  className={cn(
+                    'shrink-0 size-3.5 rounded border transition-colors flex items-center justify-center',
+                    sub.completed
+                      ? 'bg-teal-500/80 border-teal-500/80'
+                      : 'border-zinc-600 hover:border-teal-500/50'
+                  )}
+                >
+                  {sub.completed && <Check size={8} strokeWidth={3} className="text-white" />}
+                </button>
+                <span className={cn(
+                  'flex-1 text-xs truncate',
+                  sub.completed ? 'line-through text-zinc-600' : 'text-zinc-300'
+                )}>
+                  {sub.title}
+                </span>
+                <button
+                  onClick={() => onDeleteSubtask(todo.id, sub.id)}
+                  className="shrink-0 opacity-0 group-hover/sub:opacity-100 text-zinc-700 hover:text-red-400 transition-opacity"
+                >
+                  <Trash2 size={10} />
+                </button>
+              </div>
+            ))}
+
+            {/* Add subtask input */}
+            <div className="flex items-center gap-1.5 mt-1">
+              <Plus size={11} className="text-zinc-600 shrink-0" />
+              <input
+                type="text"
+                placeholder="하위 항목 추가..."
+                value={subtaskInput}
+                onChange={(e) => setSubtaskInput(e.target.value)}
+                onKeyDown={handleSubtaskKeyDown}
+                className="flex-1 bg-transparent text-zinc-300 text-xs outline-none placeholder-zinc-600"
+                spellCheck={false}
+              />
+              {subtaskInput.trim() && (
+                <button
+                  onClick={handleAddSubtask}
+                  className="text-[10px] text-teal-400 hover:text-teal-300"
+                >
+                  추가
+                </button>
+              )}
+            </div>
+          </div>
         </div>
       )}
     </div>
