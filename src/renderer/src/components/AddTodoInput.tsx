@@ -36,9 +36,9 @@ export function AddTodoInput({ onAdd }: Props) {
   }
 
   return (
-    <div className="flex items-center gap-2 px-4 py-3 border-t border-zinc-800/60">
+    <div className="flex items-center gap-2 px-4 py-3 border-t border-white/[0.04] bg-white/[0.01]">
       <input
-        className="flex-1 bg-transparent text-zinc-300 placeholder-zinc-600 outline-none text-base"
+        className="flex-1 bg-transparent text-zinc-300 placeholder-zinc-600 outline-none text-[15px] tracking-[-0.01em]"
         placeholder="할 일 추가... (#태그)"
         spellCheck={false}
         value={value}
@@ -49,9 +49,9 @@ export function AddTodoInput({ onAdd }: Props) {
         onClick={handleAdd}
         disabled={!value.trim()}
         className={cn(
-          'flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-md transition-colors active:scale-[0.96]',
-          'bg-sky-600 text-white hover:bg-sky-500',
-          'disabled:opacity-30 disabled:cursor-not-allowed disabled:active:scale-100'
+          'flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-lg active:scale-[0.95]',
+          'bg-teal-500 text-white hover:bg-teal-400 glow-teal',
+          'disabled:opacity-20 disabled:cursor-not-allowed disabled:active:scale-100 disabled:shadow-none'
         )}
       >
         <Plus size={12} />

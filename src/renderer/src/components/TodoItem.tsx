@@ -42,12 +42,12 @@ export function TodoItem({
   const dday = todo.dueDate ? getDday(todo.dueDate) : null
 
   return (
-    <div>
-      <div className="flex items-center gap-3 px-4 py-2.5 hover:bg-zinc-900/60 group transition-colors">
+    <div className="animate-slide-in">
+      <div className="flex items-center gap-2.5 px-4 py-2.5 hover:bg-white/[0.03] group transition-colors relative">
         {/* Drag handle */}
         <span
           {...dragHandleProps}
-          className="shrink-0 text-zinc-700 hover:text-zinc-500 cursor-grab active:cursor-grabbing opacity-0 group-hover:opacity-100 transition-opacity flex items-center"
+          className="shrink-0 text-zinc-800 hover:text-zinc-500 cursor-grab active:cursor-grabbing opacity-0 group-hover:opacity-100 transition-opacity flex items-center"
           aria-label="순서 변경"
         >
           <GripVertical size={14} />
@@ -59,10 +59,10 @@ export function TodoItem({
           aria-checked={todo.completed}
           onClick={() => onToggleComplete(todo.id)}
           className={cn(
-            'shrink-0 size-4 rounded border transition-colors flex items-center justify-center active:scale-[0.9]',
+            'shrink-0 size-[18px] rounded-full border-[1.5px] transition-all flex items-center justify-center active:scale-[0.85]',
             todo.completed
-              ? 'bg-sky-500 border-sky-500'
-              : 'border-zinc-600 hover:border-zinc-400 bg-transparent'
+              ? 'bg-teal-500 border-teal-500 shadow-[0_0_8px_rgba(20,184,166,0.3)]'
+              : 'border-zinc-600 hover:border-teal-500/50 bg-transparent'
           )}
         >
           {todo.completed && <Check size={10} strokeWidth={3} className="text-white" />}
@@ -73,7 +73,7 @@ export function TodoItem({
           <div className="flex items-center gap-1.5 min-w-0">
             <span
               className={cn(
-                'text-base leading-relaxed truncate',
+                'text-[15px] leading-relaxed truncate tracking-[-0.01em]',
                 todo.completed ? 'line-through text-zinc-600' : 'text-zinc-200'
               )}
             >
@@ -82,12 +82,12 @@ export function TodoItem({
             {dday && !todo.completed && (
               <span
                 className={cn(
-                  'shrink-0 text-xs font-medium tabular-nums',
+                  'shrink-0 text-[10px] font-semibold tabular-nums px-1.5 py-0.5 rounded-full',
                   dday === 'D-Day'
-                    ? 'text-red-400'
+                    ? 'text-red-300 bg-red-500/15 border border-red-500/20'
                     : dday.startsWith('D+')
-                      ? 'text-zinc-500'
-                      : 'text-sky-400'
+                      ? 'text-zinc-500 bg-zinc-700/30'
+                      : 'text-teal-300 bg-teal-500/10 border border-teal-500/15'
                 )}
               >
                 {dday}
@@ -97,16 +97,19 @@ export function TodoItem({
           {!expanded && (
             <>
               {todo.tags && todo.tags.length > 0 && (
-                <div className="flex gap-1 flex-wrap mt-0.5">
+                <div className="flex gap-1.5 flex-wrap mt-1">
                   {todo.tags.slice(0, 4).map((tag) => (
-                    <span key={tag} className="text-xs text-violet-400">
+                    <span
+                      key={tag}
+                      className="text-[10px] text-violet-400/80 bg-violet-500/8 px-1.5 py-0.5 rounded-full"
+                    >
                       #{tag}
                     </span>
                   ))}
                 </div>
               )}
               {todo.description && !(todo.tags && todo.tags.length > 0) && (
-                <span className="text-sm text-zinc-600 truncate block leading-tight mt-0.5">
+                <span className="text-[13px] text-zinc-600 truncate block leading-tight mt-0.5">
                   {todo.description}
                 </span>
               )}
@@ -118,30 +121,30 @@ export function TodoItem({
           aria-label="중요"
           onClick={() => onToggleImportant(todo.id)}
           className={cn(
-            'shrink-0 size-6 flex items-center justify-center rounded transition-all active:scale-[0.9]',
+            'shrink-0 size-6 flex items-center justify-center rounded-full transition-all active:scale-[0.85]',
             todo.important
-              ? 'text-amber-400'
-              : 'opacity-0 group-hover:opacity-100 text-zinc-600 hover:text-zinc-400'
+              ? 'text-amber-400 bg-amber-400/10'
+              : 'opacity-0 group-hover:opacity-100 text-zinc-600 hover:text-amber-400/70'
           )}
         >
-          <Star size={13} fill={todo.important ? 'currentColor' : 'none'} />
+          <Star size={12} fill={todo.important ? 'currentColor' : 'none'} />
         </button>
 
         <button
           aria-label="삭제"
           onClick={() => onDelete(todo.id)}
-          className="shrink-0 size-6 flex items-center justify-center rounded opacity-0 group-hover:opacity-100 text-zinc-600 hover:text-red-400 transition-all active:scale-[0.9]"
+          className="shrink-0 size-6 flex items-center justify-center rounded-full opacity-0 group-hover:opacity-100 text-zinc-600 hover:text-red-400 hover:bg-red-500/10 transition-all active:scale-[0.85]"
         >
-          <X size={13} />
+          <X size={12} />
         </button>
       </div>
 
       {expanded && (
-        <div className="px-4 pb-3 pl-14 space-y-2">
+        <div className="px-4 pb-3 pl-[60px] space-y-2.5">
           <textarea
             autoFocus
             rows={2}
-            className="w-full bg-transparent text-zinc-400 text-sm resize-none outline-none placeholder-zinc-600 leading-relaxed"
+            className="w-full bg-white/[0.02] rounded-lg px-3 py-2 text-zinc-400 text-sm resize-none outline-none placeholder-zinc-700 leading-relaxed border border-white/[0.04] focus:border-teal-500/20"
             placeholder="메모 추가..."
             spellCheck={false}
             value={localDesc}
@@ -150,7 +153,7 @@ export function TodoItem({
           />
 
           <div className="flex items-center gap-1.5">
-            <CalendarClock size={12} className="text-zinc-600 shrink-0" />
+            <CalendarClock size={11} className="text-zinc-600 shrink-0" />
             <input
               type="date"
               value={localDueDate}
@@ -158,7 +161,7 @@ export function TodoItem({
                 setLocalDueDate(e.target.value)
                 onUpdateDueDate(todo.id, e.target.value)
               }}
-              className="bg-transparent text-zinc-400 text-xs outline-none [color-scheme:dark] flex-1"
+              className="bg-transparent text-zinc-400 text-xs outline-none flex-1"
             />
             {localDueDate && (
               <button
@@ -166,18 +169,18 @@ export function TodoItem({
                   setLocalDueDate('')
                   onUpdateDueDate(todo.id, '')
                 }}
-                className="text-zinc-600 hover:text-zinc-400 text-xs"
+                className="text-zinc-700 hover:text-zinc-400"
               >
-                <X size={11} />
+                <X size={10} />
               </button>
             )}
           </div>
 
           <div className="flex items-center gap-1.5">
-            <Tag size={12} className="text-zinc-600 shrink-0" />
+            <Tag size={11} className="text-zinc-600 shrink-0" />
             <input
               type="text"
-              placeholder="태그 (쉼표로 구분, 예: 업무, 개인)"
+              placeholder="태그 (쉼표로 구분)"
               value={localTags}
               onChange={(e) => setLocalTags(e.target.value)}
               onBlur={() =>
@@ -189,7 +192,7 @@ export function TodoItem({
                     .filter(Boolean)
                 )
               }
-              className="flex-1 bg-transparent text-zinc-400 text-xs outline-none placeholder-zinc-600"
+              className="flex-1 bg-transparent text-zinc-400 text-xs outline-none placeholder-zinc-700"
               spellCheck={false}
             />
           </div>

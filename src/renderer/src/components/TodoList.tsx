@@ -37,7 +37,7 @@ function SortableTodoItem({
       style={{
         transform: CSS.Transform.toString(transform),
         transition,
-        opacity: isDragging ? 0.4 : 1,
+        opacity: isDragging ? 0.35 : 1,
       }}
     >
       <TodoItem todo={todo} {...props} dragHandleProps={{ ...attributes, ...listeners }} />
@@ -58,9 +58,11 @@ export function TodoList({ todos, onReorder, ...itemProps }: Props) {
 
   if (todos.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center flex-1 gap-2 text-zinc-600">
-        <Inbox size={32} strokeWidth={1.5} />
-        <span className="text-base">할 일이 없습니다</span>
+      <div className="flex flex-col items-center justify-center flex-1 gap-3 text-zinc-700">
+        <div className="size-12 rounded-full bg-white/[0.02] border border-white/[0.04] flex items-center justify-center">
+          <Inbox size={22} strokeWidth={1.2} />
+        </div>
+        <span className="text-[13px] tracking-wide">할 일이 없습니다</span>
       </div>
     )
   }

@@ -121,16 +121,23 @@ export default function App() {
   }
 
   return (
-    <div className="w-full h-full flex flex-col rounded-2xl overflow-hidden bg-zinc-900 border border-zinc-800/60 shadow-[0_8px_40px_rgba(0,0,0,0.7)] select-none font-sans">
+    <div className="grain w-full h-full flex flex-col rounded-2xl overflow-hidden bg-[#0a0a0f]/95 border border-white/[0.06] shadow-[0_8px_48px_rgba(0,0,0,0.8),inset_0_1px_0_rgba(255,255,255,0.04)] select-none font-sans">
+
+      {/* Accent glow line at top */}
+      <div className="h-[1px] shrink-0 bg-gradient-to-r from-transparent via-teal-500/40 to-transparent" />
 
       {/* Drag header */}
       <div
         style={drag}
-        className="flex items-center gap-2 px-4 py-3 bg-zinc-950/70 border-b border-zinc-800/40 shrink-0"
+        className="flex items-center gap-2 px-4 py-3 bg-white/[0.02] border-b border-white/[0.04] shrink-0"
       >
         <div className="flex-1 min-w-0">
-          <span className="text-sm font-semibold text-zinc-300 block leading-none">Daily Todo</span>
-          <span className="text-xs text-zinc-600 tabular-nums">{formatDate(today)}</span>
+          <span className="text-sm font-semibold text-zinc-200 block leading-none tracking-tight">
+            Daily Todo
+          </span>
+          <span className="text-[11px] text-zinc-500 tabular-nums tracking-wide mt-0.5 block">
+            {formatDate(today)}
+          </span>
         </div>
 
         {/* Backup buttons */}
@@ -139,7 +146,7 @@ export default function App() {
           onClick={() => window.api.exportBackup()}
           aria-label="내보내기"
           title="백업 내보내기"
-          className="size-6 flex items-center justify-center rounded-md text-zinc-600 hover:text-zinc-300 hover:bg-zinc-800 transition-colors active:scale-90"
+          className="size-6 flex items-center justify-center rounded-md text-zinc-600 hover:text-teal-400 hover:bg-white/[0.04] active:scale-90"
         >
           <Download size={12} />
         </button>
@@ -148,7 +155,7 @@ export default function App() {
           onClick={handleImport}
           aria-label="가져오기"
           title="백업 가져오기"
-          className="size-6 flex items-center justify-center rounded-md text-zinc-600 hover:text-zinc-300 hover:bg-zinc-800 transition-colors active:scale-90"
+          className="size-6 flex items-center justify-center rounded-md text-zinc-600 hover:text-teal-400 hover:bg-white/[0.04] active:scale-90"
         >
           <Upload size={12} />
         </button>
@@ -157,23 +164,23 @@ export default function App() {
           style={noDrag}
           onClick={() => window.api.hideWindow()}
           aria-label="닫기"
-          className="size-6 flex items-center justify-center rounded-md text-zinc-600 hover:text-zinc-300 hover:bg-zinc-800 transition-colors active:scale-90"
+          className="size-6 flex items-center justify-center rounded-md text-zinc-600 hover:text-red-400 hover:bg-white/[0.04] active:scale-90"
         >
           <X size={12} />
         </button>
       </div>
 
       {/* Filter tabs */}
-      <div className="flex items-center gap-0.5 px-2.5 py-2 border-b border-zinc-800/60 shrink-0">
+      <div className="flex items-center gap-0.5 px-2.5 py-2 border-b border-white/[0.04] shrink-0">
         {FILTERS.map(({ key, label, Icon }) => (
           <button
             key={key}
             onClick={() => setActiveFilter(key)}
             className={cn(
-              'flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-sm transition-colors',
+              'flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-sm transition-all',
               activeFilter === key
-                ? 'bg-zinc-800 text-zinc-100'
-                : 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/50'
+                ? 'bg-white/[0.07] text-zinc-100 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]'
+                : 'text-zinc-500 hover:text-zinc-300 hover:bg-white/[0.03]'
             )}
           >
             <Icon size={11} />
@@ -184,24 +191,33 @@ export default function App() {
 
       {/* Date navigator — only for '날짜' tab */}
       {activeFilter === 'today' && (
-        <div className="flex items-center gap-2 px-3 py-2 border-b border-zinc-800/40 shrink-0">
+        <div className="flex items-center gap-2 px-3 py-2 border-b border-white/[0.04] shrink-0">
           <button
             onClick={() => setSelectedDate(offsetDate(selectedDate, -1))}
-            className="size-7 flex items-center justify-center rounded-md text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800 transition-colors active:scale-90"
+            className="size-7 flex items-center justify-center rounded-md text-zinc-500 hover:text-zinc-200 hover:bg-white/[0.05] active:scale-90"
           >
             <ChevronLeft size={15} />
           </button>
 
           <div className="flex-1 flex items-center justify-center gap-2">
-            <span className={cn('text-sm tabular-nums', isToday ? 'text-zinc-200' : 'text-zinc-400')}>
+            <span
+              className={cn(
+                'text-sm tabular-nums tracking-wide',
+                isToday ? 'text-zinc-100' : 'text-zinc-400'
+              )}
+            >
               {formatDate(selectedDate)}
             </span>
-            {isToday && <span className="text-xs text-sky-500 font-medium">오늘</span>}
+            {isToday && (
+              <span className="text-[10px] tracking-widest uppercase text-teal-400 font-semibold px-1.5 py-0.5 rounded-full bg-teal-500/10 border border-teal-500/20">
+                오늘
+              </span>
+            )}
           </div>
 
           <button
             onClick={() => setSelectedDate(offsetDate(selectedDate, 1))}
-            className="size-7 flex items-center justify-center rounded-md text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800 transition-colors active:scale-90"
+            className="size-7 flex items-center justify-center rounded-md text-zinc-500 hover:text-zinc-200 hover:bg-white/[0.05] active:scale-90"
           >
             <ChevronRight size={15} />
           </button>
@@ -210,7 +226,7 @@ export default function App() {
 
       {/* Tag selector — only for '태그' tab */}
       {activeFilter === 'tag' && (
-        <div className="flex flex-wrap gap-1.5 px-3 py-2 border-b border-zinc-800/40 shrink-0 min-h-[40px]">
+        <div className="flex flex-wrap gap-1.5 px-3 py-2 border-b border-white/[0.04] shrink-0 min-h-[40px]">
           {allTags.length === 0 ? (
             <span className="text-xs text-zinc-600 self-center">태그가 없습니다</span>
           ) : (
@@ -219,10 +235,10 @@ export default function App() {
                 key={tag}
                 onClick={() => setActiveTag(activeTag === tag ? null : tag)}
                 className={cn(
-                  'text-xs px-2 py-1 rounded-full transition-colors',
+                  'text-xs px-2 py-1 rounded-full border transition-all',
                   activeTag === tag
-                    ? 'bg-violet-600 text-white'
-                    : 'bg-zinc-800 text-zinc-400 hover:text-zinc-200'
+                    ? 'bg-violet-500/20 text-violet-300 border-violet-500/30'
+                    : 'bg-white/[0.03] text-zinc-400 border-white/[0.06] hover:text-zinc-200 hover:border-white/[0.1]'
                 )}
               >
                 #{tag}
