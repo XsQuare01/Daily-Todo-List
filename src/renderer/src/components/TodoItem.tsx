@@ -159,7 +159,7 @@ export function TodoItem({
                 ? 'text-teal-400 bg-teal-500/15'
                 : hasElapsed
                   ? 'text-zinc-500 hover:text-teal-400'
-                  : 'opacity-0 group-hover:opacity-100 text-zinc-600 hover:text-teal-400'
+                  : 'text-zinc-600 hover:text-teal-400'
             )}
           >
             {isTimerActive ? (
