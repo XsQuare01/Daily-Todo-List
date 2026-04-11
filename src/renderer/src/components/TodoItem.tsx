@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Star, X, Check, CalendarClock, Tag } from 'lucide-react'
+import { Star, X, Check, CalendarClock, Tag, GripVertical } from 'lucide-react'
 import { cn } from '../lib/utils'
 import type { Todo } from '../types/todo'
 
@@ -47,10 +47,10 @@ export function TodoItem({
         {/* Drag handle */}
         <span
           {...dragHandleProps}
-          className="shrink-0 text-zinc-700 hover:text-zinc-500 cursor-grab active:cursor-grabbing opacity-0 group-hover:opacity-100 transition-opacity"
+          className="shrink-0 text-zinc-700 hover:text-zinc-500 cursor-grab active:cursor-grabbing opacity-0 group-hover:opacity-100 transition-opacity flex items-center"
           aria-label="순서 변경"
         >
-          ⠿
+          <GripVertical size={14} />
         </span>
 
         {/* Custom checkbox */}

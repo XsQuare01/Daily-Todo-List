@@ -4,7 +4,7 @@ import {
   Calendar,
   List,
   Star,
-  CheckCircle,
+  Archive,
   ChevronLeft,
   ChevronRight,
   Tag as TagIcon,
@@ -22,7 +22,7 @@ const FILTERS: { key: FilterType; label: string; Icon: React.ComponentType<{ siz
     { key: 'today', label: '날짜', Icon: Calendar },
     { key: 'all', label: '전체', Icon: List },
     { key: 'important', label: '중요', Icon: Star },
-    { key: 'completed', label: '완료', Icon: CheckCircle },
+    { key: 'completed', label: '완료', Icon: Archive },
     { key: 'tag', label: '태그', Icon: TagIcon },
   ]
 
