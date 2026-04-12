@@ -78,6 +78,15 @@ function buildTrayMenu(): Menu {
       label: '태그 위젯 추가',
       submenu: tagSubmenu,
     },
+    {
+      label: '위젯 클릭 통과',
+      type: 'checkbox',
+      checked: readSettings().clickThrough ?? false,
+      click: (item) => {
+        updateSettings({ clickThrough: item.checked })
+        applyClickThrough(item.checked)
+      },
+    },
     ...(openExtras.length > 0
       ? [
           { type: 'separator' as const },
@@ -289,6 +298,16 @@ function createWidgetWindow(): void {
   }
 }
 
+function applyClickThrough(enabled: boolean): void {
+  const apply = (w: BrowserWindow | null): void => {
+    if (w && !w.isDestroyed()) {
+      w.setIgnoreMouseEvents(enabled, { forward: true })
+    }
+  }
+  apply(widgetWindow)
+  extraWidgets.forEach((w) => apply(w))
+}
+
 function persistExtraWidget(id: string): void {
   const win = extraWidgets.get(id)
   if (!win) return
@@ -374,6 +393,7 @@ function spawnExtraWidgetForTag(tag: string): void {
   const current = readSettings()
   updateSettings({ extraWidgets: [...(current.extraWidgets ?? []), cfg] })
   createExtraWidget(cfg)
+  applyClickThrough(readSettings().clickThrough ?? false)
   tray?.setContextMenu(buildTrayMenu())
 }
 
@@ -431,6 +451,7 @@ app.whenReady().then(() => {
   createWindow()
   createWidgetWindow()
   restoreExtraWidgets()
+  applyClickThrough(readSettings().clickThrough ?? false)
 
   // Refresh tray menu after widget is created
   tray?.setContextMenu(buildTrayMenu())

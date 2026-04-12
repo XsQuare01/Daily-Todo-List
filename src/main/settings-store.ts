@@ -18,6 +18,7 @@ export interface ExtraWidget {
 export interface Settings {
   widget?: WidgetBounds
   extraWidgets?: ExtraWidget[]
+  clickThrough?: boolean
 }
 
 function getSettingsPath(): string {
