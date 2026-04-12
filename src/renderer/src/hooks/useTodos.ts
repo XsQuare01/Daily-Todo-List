@@ -102,15 +102,6 @@ export function useTodos() {
     save(reordered)
   }
 
-  function loadTodos(json: string) {
-    try {
-      const parsed = JSON.parse(json)
-      setTodos(parsed)
-    } catch {
-      /* keep existing */
-    }
-  }
-
   return {
     todos,
     addTodo,
@@ -126,6 +117,5 @@ export function useTodos() {
     toggleSubtask,
     deleteSubtask,
     reorderTodos,
-    loadTodos,
   }
 }

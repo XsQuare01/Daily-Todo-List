@@ -1,4 +1,14 @@
-import { app, shell, BrowserWindow, ipcMain, Tray, Menu, nativeImage, screen } from 'electron'
+import {
+  app,
+  shell,
+  BrowserWindow,
+  ipcMain,
+  Tray,
+  Menu,
+  nativeImage,
+  screen,
+  globalShortcut,
+} from 'electron'
 import { get as httpsGet } from 'https'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
@@ -263,9 +273,34 @@ app.whenReady().then(() => {
   // Refresh tray menu after widget is created
   tray?.setContextMenu(buildTrayMenu())
 
+  // Global shortcuts
+  globalShortcut.register('Control+Shift+D', () => {
+    if (!widgetWindow) return
+    if (widgetWindow.isVisible()) {
+      widgetWindow.hide()
+    } else {
+      widgetWindow.show()
+    }
+    tray?.setContextMenu(buildTrayMenu())
+  })
+
+  globalShortcut.register('Control+Shift+N', () => {
+    if (!mainWindow) return
+    widgetWindow?.hide()
+    const { x, y } = getWindowPosition(360, 560)
+    mainWindow.setPosition(x, y)
+    mainWindow.show()
+    mainWindow.focus()
+    mainWindow.webContents.send('app:focus-add')
+  })
+
   app.on('activate', function () {
     if (BrowserWindow.getAllWindows().length === 0) createWindow()
   })
+})
+
+app.on('will-quit', () => {
+  globalShortcut.unregisterAll()
 })
 
 app.on('window-all-closed', () => {

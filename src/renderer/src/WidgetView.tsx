@@ -53,7 +53,7 @@ export default function WidgetView() {
   return (
     <div
       style={drag}
-      className="w-full h-full flex flex-col rounded-xl overflow-hidden bg-black/20 backdrop-blur-md select-none font-sans"
+      className="w-full h-full flex flex-col overflow-hidden bg-[#0a0a0f] border border-white/[0.06] select-none font-sans"
     >
       {/* Header */}
       <div className="px-3 pt-3 pb-1.5">

@@ -1,9 +1,10 @@
-import { useState, KeyboardEvent } from 'react'
+import { useState, useRef, useEffect, KeyboardEvent } from 'react'
 import { Plus } from 'lucide-react'
 import { cn } from '../lib/utils'
 
 interface Props {
   onAdd: (title: string, tags?: string[]) => void
+  focusSignal?: number
 }
 
 function parseInput(raw: string): { title: string; tags: string[] } {
@@ -18,8 +19,15 @@ function parseInput(raw: string): { title: string; tags: string[] } {
   return { title, tags }
 }
 
-export function AddTodoInput({ onAdd }: Props) {
+export function AddTodoInput({ onAdd, focusSignal }: Props) {
   const [value, setValue] = useState('')
+  const inputRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    if (focusSignal === undefined) return
+    inputRef.current?.focus()
+    inputRef.current?.select()
+  }, [focusSignal])
 
   function handleAdd() {
     const trimmed = value.trim()
@@ -38,6 +46,7 @@ export function AddTodoInput({ onAdd }: Props) {
   return (
     <div className="flex items-center gap-2 px-4 py-3 border-t border-white/[0.04] bg-white/[0.01]">
       <input
+        ref={inputRef}
         className="flex-1 bg-transparent text-zinc-300 placeholder-zinc-600 outline-none text-[15px] tracking-[-0.01em]"
         placeholder="할 일 추가... (#태그)"
         spellCheck={false}

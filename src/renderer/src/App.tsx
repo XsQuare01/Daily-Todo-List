@@ -8,8 +8,6 @@ import {
   ChevronLeft,
   ChevronRight,
   Tag as TagIcon,
-  Download,
-  Upload,
 } from 'lucide-react'
 import { TodoList } from './components/TodoList'
 import { AddTodoInput } from './components/AddTodoInput'
@@ -77,7 +75,6 @@ export default function App() {
     toggleSubtask,
     deleteSubtask,
     reorderTodos,
-    loadTodos,
   } = useTodos()
 
   // ── Stopwatch state ──
@@ -131,6 +128,12 @@ export default function App() {
   const [today, setToday] = useState(getKSTToday)
   const isToday = selectedDate === today
 
+  // Focus add input when main process sends app:focus-add (Ctrl+Shift+N)
+  const [focusAddSignal, setFocusAddSignal] = useState(0)
+  useEffect(() => {
+    window.api.onFocusAdd(() => setFocusAddSignal((n) => n + 1))
+  }, [])
+
   useEffect(() => {
     window.api
       .getNetworkDate()
@@ -168,13 +171,8 @@ export default function App() {
     }
   }, [todos, activeFilter, selectedDate, activeTag])
 
-  async function handleImport() {
-    const json = await window.api.importBackup()
-    if (json) loadTodos(json)
-  }
-
   return (
-    <div className="grain w-full h-full flex flex-col rounded-2xl overflow-hidden bg-[#0a0a0f]/95 border border-white/[0.06] shadow-[0_8px_48px_rgba(0,0,0,0.8),inset_0_1px_0_rgba(255,255,255,0.04)] select-none font-sans">
+    <div className="grain w-full h-full flex flex-col overflow-hidden bg-[#0a0a0f] border border-white/[0.06] shadow-[0_8px_48px_rgba(0,0,0,0.8),inset_0_1px_0_rgba(255,255,255,0.04)] select-none font-sans">
 
       {/* Accent glow line at top */}
       <div className="h-[1px] shrink-0 bg-gradient-to-r from-transparent via-teal-500/40 to-transparent" />
@@ -192,26 +190,6 @@ export default function App() {
             {formatDate(today)}
           </span>
         </div>
-
-        {/* Backup buttons */}
-        <button
-          style={noDrag}
-          onClick={() => window.api.exportBackup()}
-          aria-label="내보내기"
-          title="백업 내보내기"
-          className="relative size-6 flex items-center justify-center rounded-md text-zinc-600 hover:text-teal-400 hover:bg-white/[0.04] active:scale-[0.96] after:absolute after:content-[''] after:-inset-2"
-        >
-          <Download size={12} />
-        </button>
-        <button
-          style={noDrag}
-          onClick={handleImport}
-          aria-label="가져오기"
-          title="백업 가져오기"
-          className="relative size-6 flex items-center justify-center rounded-md text-zinc-600 hover:text-teal-400 hover:bg-white/[0.04] active:scale-[0.96] after:absolute after:content-[''] after:-inset-2"
-        >
-          <Upload size={12} />
-        </button>
 
         <button
           style={noDrag}
@@ -324,6 +302,7 @@ export default function App() {
       {/* Add input */}
       {activeFilter !== 'completed' && (
         <AddTodoInput
+          focusSignal={focusAddSignal}
           onAdd={(title, tags) =>
             addTodo(title, activeFilter === 'today' ? selectedDate : undefined, tags)
           }
