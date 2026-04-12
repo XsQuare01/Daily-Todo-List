@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react'
-import { Check } from 'lucide-react'
+import { useState, useEffect, KeyboardEvent } from 'react'
+import { Check, Plus } from 'lucide-react'
 import { cn } from './lib/utils'
 import type { Todo, Priority } from './types/todo'
 
@@ -24,9 +24,22 @@ const PRIORITY_DOT: Record<Priority, string> = {
   low: 'bg-blue-400',
 }
 
+function parseInput(raw: string): { title: string; tags: string[] } {
+  const tags: string[] = []
+  const title = raw
+    .replace(/#([^\s#]+)/g, (_, tag: string) => {
+      tags.push(tag)
+      return ''
+    })
+    .replace(/\s+/g, ' ')
+    .trim()
+  return { title, tags }
+}
+
 export default function WidgetView() {
   const [todos, setTodos] = useState<Todo[]>([])
   const [today, setToday] = useState(getKSTToday)
+  const [draft, setDraft] = useState('')
 
   useEffect(() => {
     window.api.getTodos().then((json) => {
@@ -48,6 +61,29 @@ export default function WidgetView() {
     const updated = todos.map((t) => (t.id === id ? { ...t, completed: !t.completed } : t))
     setTodos(updated)
     window.api.saveTodos(JSON.stringify(updated))
+  }
+
+  function handleAdd() {
+    const trimmed = draft.trim()
+    if (!trimmed) return
+    const { title, tags } = parseInput(trimmed)
+    if (!title) return
+    const newTodo: Todo = {
+      id: crypto.randomUUID(),
+      title,
+      completed: false,
+      important: false,
+      createdAt: today,
+      ...(tags.length > 0 ? { tags } : {}),
+    }
+    const updated = [...todos, newTodo]
+    setTodos(updated)
+    window.api.saveTodos(JSON.stringify(updated))
+    setDraft('')
+  }
+
+  function handleKeyDown(e: KeyboardEvent<HTMLInputElement>) {
+    if (e.key === 'Enter') handleAdd()
   }
 
   return (
@@ -112,6 +148,29 @@ export default function WidgetView() {
             )
           })
         )}
+      </div>
+
+      {/* Inline add */}
+      <div
+        style={noDrag}
+        className="flex items-center gap-1.5 px-2.5 py-1.5 border-t border-white/[0.06] bg-white/[0.02]"
+      >
+        <input
+          className="flex-1 bg-transparent text-[12px] text-white/70 placeholder-white/20 outline-none tracking-[-0.01em]"
+          placeholder="빠른 추가... (#태그)"
+          spellCheck={false}
+          value={draft}
+          onChange={(e) => setDraft(e.target.value)}
+          onKeyDown={handleKeyDown}
+        />
+        <button
+          onClick={handleAdd}
+          disabled={!draft.trim()}
+          aria-label="추가"
+          className="shrink-0 size-5 flex items-center justify-center rounded-md text-white/40 hover:text-teal-400 hover:bg-white/[0.05] active:scale-[0.96] disabled:opacity-30 disabled:hover:bg-transparent"
+        >
+          <Plus size={11} />
+        </button>
       </div>
     </div>
   )
