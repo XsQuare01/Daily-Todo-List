@@ -1,5 +1,5 @@
 import { useState, useEffect, KeyboardEvent } from 'react'
-import { Check, Plus } from 'lucide-react'
+import { Check, Plus, Minimize2, Maximize2 } from 'lucide-react'
 import { cn } from './lib/utils'
 import type { Todo, Priority } from './types/todo'
 
@@ -40,6 +40,16 @@ export default function WidgetView() {
   const [todos, setTodos] = useState<Todo[]>([])
   const [today, setToday] = useState(getKSTToday)
   const [draft, setDraft] = useState('')
+  const [compact, setCompact] = useState(() => localStorage.getItem('widget:compact') === '1')
+  const [hovered, setHovered] = useState(false)
+
+  function toggleCompact() {
+    setCompact((c) => {
+      const next = !c
+      localStorage.setItem('widget:compact', next ? '1' : '0')
+      return next
+    })
+  }
 
   useEffect(() => {
     window.api.getTodos().then((json) => {
@@ -86,19 +96,61 @@ export default function WidgetView() {
     if (e.key === 'Enter') handleAdd()
   }
 
+  const firstPending = todayTodos[0]
+
   return (
     <div
-      style={drag}
-      className="w-full h-full flex flex-col overflow-hidden bg-[#0a0a0f] border border-white/[0.06] select-none font-sans"
+      style={{ ...drag, opacity: hovered ? 1 : 0.7 }}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      className="w-full h-full flex flex-col overflow-hidden bg-[#0a0a0f] border border-white/[0.06] select-none font-sans transition-opacity duration-200"
     >
       {/* Header */}
-      <div className="px-3 pt-3 pb-1.5">
-        <span className="text-[11px] text-white/40 font-medium tracking-wide uppercase">
+      <div className="flex items-center gap-2 px-3 pt-3 pb-1.5">
+        <span className="flex-1 text-[11px] text-white/40 font-medium tracking-wide uppercase">
           {formatDate(today)}
         </span>
+        <button
+          style={noDrag}
+          onClick={toggleCompact}
+          aria-label={compact ? '펼치기' : '한 줄 모드'}
+          title={compact ? '펼치기' : '한 줄 모드'}
+          className="shrink-0 size-5 flex items-center justify-center rounded-md text-white/30 hover:text-white/70 hover:bg-white/[0.06] active:scale-[0.96]"
+        >
+          {compact ? <Maximize2 size={11} /> : <Minimize2 size={11} />}
+        </button>
       </div>
 
+      {/* Compact single-line view */}
+      {compact && (
+        <div className="flex-1 flex items-center px-3 pb-2 min-h-0">
+          {firstPending ? (
+            <button
+              style={noDrag}
+              onClick={() => handleToggle(firstPending.id)}
+              className="flex items-center gap-2 w-full text-left hover:bg-white/[0.04] rounded-md px-1.5 py-1 active:scale-[0.99]"
+            >
+              <span className="shrink-0 size-3 rounded-full border border-white/25" />
+              {firstPending.priority && (
+                <span className={cn('shrink-0 size-[5px] rounded-full', PRIORITY_DOT[firstPending.priority])} />
+              )}
+              <span className="flex-1 min-w-0 text-[13px] text-white/75 truncate">
+                {firstPending.title}
+              </span>
+              {todayTodos.length > 1 && (
+                <span className="shrink-0 text-[10px] text-white/30 tabular-nums">
+                  +{todayTodos.length - 1}
+                </span>
+              )}
+            </button>
+          ) : (
+            <span className="text-xs text-white/20 mx-auto">할 일 없음</span>
+          )}
+        </div>
+      )}
+
       {/* Task list */}
+      {!compact && (
       <div className="flex-1 overflow-y-auto px-1.5 pb-2">
         {todayTodos.length === 0 ? (
           <div className="flex items-center justify-center h-full">
@@ -149,8 +201,10 @@ export default function WidgetView() {
           })
         )}
       </div>
+      )}
 
       {/* Inline add */}
+      {!compact && (
       <div
         style={noDrag}
         className="flex items-center gap-1.5 px-2.5 py-1.5 border-t border-white/[0.06] bg-white/[0.02]"
@@ -172,6 +226,7 @@ export default function WidgetView() {
           <Plus size={11} />
         </button>
       </div>
+      )}
     </div>
   )
 }
