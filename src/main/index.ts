@@ -10,15 +10,17 @@ import {
   globalShortcut,
 } from 'electron'
 import { get as httpsGet } from 'https'
+import { randomUUID } from 'crypto'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
-import { registerTodosIpc } from './todos-store'
-import { readSettings, updateSettings } from './settings-store'
+import { registerTodosIpc, getAllTags } from './todos-store'
+import { readSettings, updateSettings, type ExtraWidget, type WidgetBounds } from './settings-store'
 
 let tray: Tray | null = null
 let mainWindow: BrowserWindow | null = null
 let widgetWindow: BrowserWindow | null = null
+const extraWidgets = new Map<string, BrowserWindow>()
 
 function getWindowPosition(width: number, height: number): { x: number; y: number } {
   const trayBounds = tray?.getBounds()
@@ -30,6 +32,27 @@ function getWindowPosition(width: number, height: number): { x: number; y: numbe
 }
 
 function buildTrayMenu(): Menu {
+  const tags = getAllTags()
+  const tagSubmenu: Electron.MenuItemConstructorOptions[] =
+    tags.length > 0
+      ? tags.map((tag) => ({
+          label: `#${tag}`,
+          click: () => spawnExtraWidgetForTag(tag),
+        }))
+      : [{ label: '(태그 없음)', enabled: false }]
+
+  const openExtras: Electron.MenuItemConstructorOptions[] = Array.from(extraWidgets.entries()).map(
+    ([id, win]) => {
+      const cfg = readSettings().extraWidgets?.find((w) => w.id === id)
+      return {
+        label: `#${cfg?.tag ?? '?'} 닫기`,
+        click: () => {
+          if (!win.isDestroyed()) removeExtraWidget(id)
+        },
+      }
+    }
+  )
+
   return Menu.buildFromTemplate([
     {
       label: '열기',
@@ -51,6 +74,17 @@ function buildTrayMenu(): Menu {
         }
       },
     },
+    {
+      label: '태그 위젯 추가',
+      submenu: tagSubmenu,
+    },
+    ...(openExtras.length > 0
+      ? [
+          { type: 'separator' as const },
+          ...openExtras,
+        ]
+      : []),
+    { type: 'separator' },
     {
       label: '시작 시 자동 실행',
       type: 'checkbox',
@@ -255,8 +289,103 @@ function createWidgetWindow(): void {
   }
 }
 
+function persistExtraWidget(id: string): void {
+  const win = extraWidgets.get(id)
+  if (!win) return
+  const [x, y] = win.getPosition()
+  const [width, height] = win.getSize()
+  const current = readSettings()
+  const list = (current.extraWidgets ?? []).map((w) =>
+    w.id === id ? { ...w, bounds: { x, y, width, height } } : w
+  )
+  updateSettings({ extraWidgets: list })
+}
+
+function removeExtraWidget(id: string): void {
+  const win = extraWidgets.get(id)
+  if (win && !win.isDestroyed()) {
+    win.destroy()
+  }
+  extraWidgets.delete(id)
+  const current = readSettings()
+  updateSettings({
+    extraWidgets: (current.extraWidgets ?? []).filter((w) => w.id !== id),
+  })
+  tray?.setContextMenu(buildTrayMenu())
+}
+
+function createExtraWidget(cfg: ExtraWidget): void {
+  const bounds = clampWidgetBoundsToDisplay(cfg.bounds)
+
+  const win = new BrowserWindow({
+    width: bounds.width,
+    height: bounds.height,
+    x: bounds.x,
+    y: bounds.y,
+    minWidth: WIDGET_MIN.width,
+    minHeight: WIDGET_MIN.height,
+    maxWidth: WIDGET_MAX.width,
+    maxHeight: WIDGET_MAX.height,
+    frame: false,
+    transparent: false,
+    backgroundColor: '#0a0a0f',
+    resizable: true,
+    skipTaskbar: true,
+    alwaysOnTop: true,
+    title: `Todo #${cfg.tag}`,
+    show: true,
+    webPreferences: {
+      preload: join(__dirname, '../preload/index.js'),
+      sandbox: false,
+    },
+  })
+
+  win.on('moved', () => persistExtraWidget(cfg.id))
+  win.on('resized', () => persistExtraWidget(cfg.id))
+  win.on('close', (e) => {
+    e.preventDefault()
+    removeExtraWidget(cfg.id)
+  })
+
+  if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
+    win.loadURL(
+      `${process.env['ELECTRON_RENDERER_URL']}?mode=widget&tag=${encodeURIComponent(cfg.tag)}`
+    )
+  } else {
+    win.loadFile(join(__dirname, '../renderer/index.html'), {
+      query: { mode: 'widget', tag: cfg.tag },
+    })
+  }
+
+  extraWidgets.set(cfg.id, win)
+}
+
+function spawnExtraWidgetForTag(tag: string): void {
+  const display = screen.getPrimaryDisplay()
+  const area = display.workArea
+  const offset = extraWidgets.size * 28
+  const bounds: WidgetBounds = {
+    x: area.x + area.width - WIDGET_DEFAULT.width - 48 - offset,
+    y: area.y + 80 + offset,
+    width: WIDGET_DEFAULT.width,
+    height: WIDGET_DEFAULT.height,
+  }
+  const cfg: ExtraWidget = { id: randomUUID(), tag, bounds }
+  const current = readSettings()
+  updateSettings({ extraWidgets: [...(current.extraWidgets ?? []), cfg] })
+  createExtraWidget(cfg)
+  tray?.setContextMenu(buildTrayMenu())
+}
+
+function restoreExtraWidgets(): void {
+  const saved = readSettings().extraWidgets ?? []
+  saved.forEach((cfg) => createExtraWidget(cfg))
+}
+
 app.whenReady().then(() => {
-  registerTodosIpc()
+  registerTodosIpc(() => {
+    tray?.setContextMenu(buildTrayMenu())
+  })
 
   electronApp.setAppUserModelId('com.dailytodo.app')
 
@@ -301,6 +430,7 @@ app.whenReady().then(() => {
   createTray()
   createWindow()
   createWidgetWindow()
+  restoreExtraWidgets()
 
   // Refresh tray menu after widget is created
   tray?.setContextMenu(buildTrayMenu())

@@ -9,8 +9,15 @@ export interface WidgetBounds {
   height: number
 }
 
+export interface ExtraWidget {
+  id: string
+  tag: string
+  bounds: WidgetBounds
+}
+
 export interface Settings {
   widget?: WidgetBounds
+  extraWidgets?: ExtraWidget[]
 }
 
 function getSettingsPath(): string {

@@ -36,17 +36,20 @@ function parseInput(raw: string): { title: string; tags: string[] } {
   return { title, tags }
 }
 
+const filterTag = new URLSearchParams(window.location.search).get('tag') ?? null
+
 export default function WidgetView() {
   const [todos, setTodos] = useState<Todo[]>([])
   const [today, setToday] = useState(getKSTToday)
   const [draft, setDraft] = useState('')
-  const [compact, setCompact] = useState(() => localStorage.getItem('widget:compact') === '1')
+  const compactKey = filterTag ? `widget:compact:${filterTag}` : 'widget:compact'
+  const [compact, setCompact] = useState(() => localStorage.getItem(compactKey) === '1')
   const [hovered, setHovered] = useState(false)
 
   function toggleCompact() {
     setCompact((c) => {
       const next = !c
-      localStorage.setItem('widget:compact', next ? '1' : '0')
+      localStorage.setItem(compactKey, next ? '1' : '0')
       return next
     })
   }
@@ -65,7 +68,9 @@ export default function WidgetView() {
     })
   }, [])
 
-  const todayTodos = todos.filter((t) => t.createdAt === today && !t.completed)
+  const todayTodos = filterTag
+    ? todos.filter((t) => !t.completed && t.tags?.includes(filterTag))
+    : todos.filter((t) => t.createdAt === today && !t.completed)
 
   function handleToggle(id: string) {
     const updated = todos.map((t) => (t.id === id ? { ...t, completed: !t.completed } : t))
@@ -78,13 +83,16 @@ export default function WidgetView() {
     if (!trimmed) return
     const { title, tags } = parseInput(trimmed)
     if (!title) return
+    const mergedTags = filterTag
+      ? Array.from(new Set([filterTag, ...tags]))
+      : tags
     const newTodo: Todo = {
       id: crypto.randomUUID(),
       title,
       completed: false,
       important: false,
       createdAt: today,
-      ...(tags.length > 0 ? { tags } : {}),
+      ...(mergedTags.length > 0 ? { tags: mergedTags } : {}),
     }
     const updated = [...todos, newTodo]
     setTodos(updated)
@@ -107,8 +115,8 @@ export default function WidgetView() {
     >
       {/* Header */}
       <div className="flex items-center gap-2 px-3 pt-3 pb-1.5">
-        <span className="flex-1 text-[11px] text-white/40 font-medium tracking-wide uppercase">
-          {formatDate(today)}
+        <span className="flex-1 text-[11px] text-white/40 font-medium tracking-wide uppercase truncate">
+          {filterTag ? `#${filterTag}` : formatDate(today)}
         </span>
         <button
           style={noDrag}
