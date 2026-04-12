@@ -1,10 +1,10 @@
-import { app, shell, BrowserWindow, ipcMain, Tray, Menu, nativeImage, screen, dialog } from 'electron'
+import { app, shell, BrowserWindow, ipcMain, Tray, Menu, nativeImage, screen } from 'electron'
 import { get as httpsGet } from 'https'
-import { readFileSync, writeFileSync } from 'fs'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
-import { registerTodosIpc, readTodos, writeTodos } from './todos-store'
+import { registerTodosIpc } from './todos-store'
+import { readSettings, updateSettings } from './settings-store'
 
 let tray: Tray | null = null
 let mainWindow: BrowserWindow | null = null
@@ -89,7 +89,8 @@ function createWindow(): void {
     x,
     y,
     frame: false,
-    transparent: true,
+    transparent: false,
+    backgroundColor: '#0a0a0f',
     resizable: false,
     skipTaskbar: true,
     alwaysOnTop: false,
@@ -132,20 +133,56 @@ function createWindow(): void {
   }
 }
 
+const WIDGET_MIN = { width: 220, height: 160 }
+const WIDGET_MAX = { width: 800, height: 900 }
+const WIDGET_DEFAULT = { width: 320, height: 480 }
+
+function clampWidgetBoundsToDisplay(b: { x: number; y: number; width: number; height: number }): {
+  x: number
+  y: number
+  width: number
+  height: number
+} {
+  const width = Math.min(WIDGET_MAX.width, Math.max(WIDGET_MIN.width, b.width))
+  const height = Math.min(WIDGET_MAX.height, Math.max(WIDGET_MIN.height, b.height))
+  const display = screen.getDisplayNearestPoint({ x: b.x, y: b.y })
+  const area = display.workArea
+  const x = Math.min(Math.max(b.x, area.x), area.x + area.width - width)
+  const y = Math.min(Math.max(b.y, area.y), area.y + area.height - height)
+  return { x, y, width, height }
+}
+
+function persistWidgetBounds(): void {
+  if (!widgetWindow) return
+  const [x, y] = widgetWindow.getPosition()
+  const [width, height] = widgetWindow.getSize()
+  updateSettings({ widget: { x, y, width, height } })
+}
+
 function createWidgetWindow(): void {
-  const display = screen.getPrimaryDisplay()
-  const { x: wx, y: wy, width: sw, height: sh } = display.workArea
-  const ww = 320
-  const wh = 480
+  const saved = readSettings().widget
+  const fallbackDisplay = screen.getPrimaryDisplay()
+  const { x: wx, y: wy, width: sw, height: sh } = fallbackDisplay.workArea
+  const fallback = {
+    x: wx + sw - WIDGET_DEFAULT.width - 16,
+    y: wy + sh - WIDGET_DEFAULT.height - 80,
+    ...WIDGET_DEFAULT,
+  }
+  const bounds = clampWidgetBoundsToDisplay(saved ?? fallback)
 
   widgetWindow = new BrowserWindow({
-    width: ww,
-    height: wh,
-    x: wx + sw - ww - 16,
-    y: wy + sh - wh - 80,
+    width: bounds.width,
+    height: bounds.height,
+    x: bounds.x,
+    y: bounds.y,
+    minWidth: WIDGET_MIN.width,
+    minHeight: WIDGET_MIN.height,
+    maxWidth: WIDGET_MAX.width,
+    maxHeight: WIDGET_MAX.height,
     frame: false,
-    transparent: true,
-    resizable: false,
+    transparent: false,
+    backgroundColor: '#0a0a0f',
+    resizable: true,
     skipTaskbar: true,
     alwaysOnTop: true,
     title: 'Daily Todo Widget',
@@ -155,6 +192,10 @@ function createWidgetWindow(): void {
       sandbox: false,
     },
   })
+
+  // Persist position/size (debounced via 'moved'/'resized' end events)
+  widgetWindow.on('moved', persistWidgetBounds)
+  widgetWindow.on('resized', persistWidgetBounds)
 
   // Don't close, just hide
   widgetWindow.on('close', (e) => {
@@ -184,28 +225,6 @@ app.whenReady().then(() => {
   ipcMain.on('window:hide', (event) => {
     const win = BrowserWindow.fromWebContents(event.sender)
     win?.hide()
-  })
-
-  ipcMain.handle('backup:export', async () => {
-    const { filePath, canceled } = await dialog.showSaveDialog({
-      defaultPath: `todos-backup-${new Date().toISOString().slice(0, 10)}.json`,
-      filters: [{ name: 'JSON', extensions: ['json'] }],
-    })
-    if (canceled || !filePath) return false
-    writeFileSync(filePath, readTodos(), 'utf-8')
-    return true
-  })
-
-  ipcMain.handle('backup:import', async () => {
-    const { filePaths, canceled } = await dialog.showOpenDialog({
-      filters: [{ name: 'JSON', extensions: ['json'] }],
-      properties: ['openFile'],
-    })
-    if (canceled || filePaths.length === 0) return null
-    const json = readFileSync(filePaths[0], 'utf-8')
-    JSON.parse(json)
-    writeTodos(json)
-    return json
   })
 
   function nodeGet(url: string): Promise<string> {
