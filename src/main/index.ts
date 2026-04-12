@@ -162,6 +162,35 @@ function clampWidgetBoundsToDisplay(b: { x: number; y: number; width: number; he
   return { x, y, width, height }
 }
 
+const SNAP_THRESHOLD = 24
+const SNAP_MARGIN = 12
+
+function snapWidgetToEdges(): void {
+  if (!widgetWindow) return
+  const [x, y] = widgetWindow.getPosition()
+  const [width, height] = widgetWindow.getSize()
+  const display = screen.getDisplayNearestPoint({ x, y })
+  const area = display.workArea
+
+  let nextX = x
+  let nextY = y
+
+  const leftGap = x - area.x
+  const rightGap = area.x + area.width - (x + width)
+  const topGap = y - area.y
+  const bottomGap = area.y + area.height - (y + height)
+
+  if (leftGap < SNAP_THRESHOLD) nextX = area.x + SNAP_MARGIN
+  else if (rightGap < SNAP_THRESHOLD) nextX = area.x + area.width - width - SNAP_MARGIN
+
+  if (topGap < SNAP_THRESHOLD) nextY = area.y + SNAP_MARGIN
+  else if (bottomGap < SNAP_THRESHOLD) nextY = area.y + area.height - height - SNAP_MARGIN
+
+  if (nextX !== x || nextY !== y) {
+    widgetWindow.setPosition(nextX, nextY, false)
+  }
+}
+
 function persistWidgetBounds(): void {
   if (!widgetWindow) return
   const [x, y] = widgetWindow.getPosition()
@@ -203,8 +232,11 @@ function createWidgetWindow(): void {
     },
   })
 
-  // Persist position/size (debounced via 'moved'/'resized' end events)
-  widgetWindow.on('moved', persistWidgetBounds)
+  // Snap to screen edges on move-end, then persist
+  widgetWindow.on('moved', () => {
+    snapWidgetToEdges()
+    persistWidgetBounds()
+  })
   widgetWindow.on('resized', persistWidgetBounds)
 
   // Don't close, just hide
