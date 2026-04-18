@@ -1,34 +1,21 @@
 import { useState, useEffect } from 'react'
-import { getKSTToday } from '../lib/date'
+import { createTodo, loadTodos, persistTodos } from '../lib/todos-ipc'
 import type { Todo, Priority, Subtask } from '../types/todo'
 
 export function useTodos() {
   const [todos, setTodos] = useState<Todo[]>([])
 
   useEffect(() => {
-    window.api.getTodos().then((json) => {
-      try {
-        setTodos(JSON.parse(json))
-      } catch {
-        setTodos([])
-      }
-    })
+    loadTodos().then(setTodos)
   }, [])
 
   function save(updated: Todo[]) {
     setTodos(updated)
-    window.api.saveTodos(JSON.stringify(updated))
+    void persistTodos(updated)
   }
 
   function addTodo(title: string, date?: string, tags?: string[]) {
-    const newTodo: Todo = {
-      id: crypto.randomUUID(),
-      title: title.trim(),
-      completed: false,
-      important: false,
-      createdAt: date ?? getKSTToday(),
-      ...(tags && tags.length > 0 ? { tags } : {}),
-    }
+    const newTodo = createTodo(title, date, tags)
     save([...todos, newTodo])
   }
 

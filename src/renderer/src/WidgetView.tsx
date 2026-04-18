@@ -2,6 +2,7 @@ import { useState, useEffect, KeyboardEvent } from 'react'
 import { Check, Plus, Minimize2, Maximize2 } from 'lucide-react'
 import { formatDate, getKSTToday } from './lib/date'
 import { parseTodoInput } from './lib/todo-input'
+import { createTodo, loadTodos, persistTodos, subscribeTodos } from './lib/todos-ipc'
 import { cn } from './lib/utils'
 import type { Todo, Priority } from './types/todo'
 
@@ -33,17 +34,13 @@ export default function WidgetView() {
   }
 
   useEffect(() => {
-    window.api.getTodos().then((json) => {
-      try { setTodos(JSON.parse(json)) } catch { /* empty */ }
-    })
+    loadTodos().then(setTodos)
 
     window.api.getNetworkDate().then((date) => {
       if (date) setToday(date)
     }).catch(() => {})
 
-    return window.api.onTodosUpdated((json) => {
-      try { setTodos(JSON.parse(json)) } catch { /* empty */ }
-    })
+    return subscribeTodos(setTodos)
   }, [])
 
   const todayTodos = filterTag
@@ -53,7 +50,7 @@ export default function WidgetView() {
   function handleToggle(id: string) {
     const updated = todos.map((t) => (t.id === id ? { ...t, completed: !t.completed } : t))
     setTodos(updated)
-    window.api.saveTodos(JSON.stringify(updated))
+    void persistTodos(updated)
   }
 
   function handleAdd() {
@@ -64,17 +61,10 @@ export default function WidgetView() {
     const mergedTags = filterTag
       ? Array.from(new Set([filterTag, ...tags]))
       : tags
-    const newTodo: Todo = {
-      id: crypto.randomUUID(),
-      title,
-      completed: false,
-      important: false,
-      createdAt: today,
-      ...(mergedTags.length > 0 ? { tags: mergedTags } : {}),
-    }
+    const newTodo = createTodo(title, today, mergedTags)
     const updated = [...todos, newTodo]
     setTodos(updated)
-    window.api.saveTodos(JSON.stringify(updated))
+    void persistTodos(updated)
     setDraft('')
   }
 
