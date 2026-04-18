@@ -23,6 +23,7 @@ export default function App({ mode = 'popup' }: AppProps) {
   const [activeFilter, setActiveFilter] = useState<FilterType>('today')
   const [selectedDate, setSelectedDate] = useState(getKSTToday)
   const [activeTag, setActiveTag] = useState<string | null>(null)
+  const [focusedTodoId, setFocusedTodoId] = useState<string | null>(null)
   const isDesktop = mode === 'desktop'
 
   useEffect(() => {
@@ -138,6 +139,27 @@ export default function App({ mode = 'popup' }: AppProps) {
     () => todos.filter((t) => t.important && !t.completed),
     [todos]
   )
+  const focusCandidates = useMemo(
+    () => (importantTodos.length > 0 ? importantTodos : pendingTodos).slice(0, 5),
+    [importantTodos, pendingTodos]
+  )
+  const focusedTodo = useMemo(() => {
+    if (activeTimerId) {
+      return todos.find((t) => t.id === activeTimerId) ?? null
+    }
+    if (focusedTodoId) {
+      return todos.find((t) => t.id === focusedTodoId) ?? null
+    }
+    return focusCandidates[0] ?? null
+  }, [activeTimerId, focusedTodoId, todos, focusCandidates])
+
+  useEffect(() => {
+    if (!focusedTodoId) return
+    const exists = todos.some((t) => t.id === focusedTodoId && !t.completed)
+    if (!exists) {
+      setFocusedTodoId(null)
+    }
+  }, [focusedTodoId, todos])
 
   const popupTodos = useMemo(() => {
     switch (activeFilter) {
@@ -321,6 +343,75 @@ export default function App({ mode = 'popup' }: AppProps) {
               <div>
                 <div className="text-[11px] uppercase tracking-[0.2em] text-zinc-500 mb-3">Focus</div>
                 <div className="flex flex-col gap-2">{desktopFiltersNav}</div>
+              </div>
+              <div className="rounded-xl border border-white/[0.14] bg-white/[0.02] p-4 space-y-4">
+                <div>
+                  <div className="text-[11px] uppercase tracking-[0.2em] text-zinc-500">Focus Session</div>
+                  {focusedTodo ? (
+                    <>
+                      <div className="mt-2 text-base font-semibold text-zinc-100 leading-snug">{focusedTodo.title}</div>
+                      <div className="mt-2 flex items-center gap-2 flex-wrap text-xs text-zinc-400">
+                        <span className="px-2 py-1 rounded-md border border-white/[0.12] bg-white/[0.03] tabular-nums">
+                          {activeTimerId === focusedTodo.id ? '진행 중' : '대기 중'}
+                        </span>
+                        <span className="px-2 py-1 rounded-md border border-white/[0.12] bg-white/[0.03] tabular-nums">
+                          {getDisplayElapsed(focusedTodo)}
+                        </span>
+                      </div>
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        <button
+                          style={noDrag}
+                          onClick={() => toggleTimer(focusedTodo.id)}
+                          className="rounded-md border border-teal-300/50 bg-teal-400/10 px-3 py-2 text-xs font-medium text-teal-200 hover:bg-teal-400/16"
+                        >
+                          {activeTimerId === focusedTodo.id ? '세션 일시정지' : '세션 시작'}
+                        </button>
+                        <button
+                          style={noDrag}
+                          onClick={() => handleToggleComplete(focusedTodo.id)}
+                          className="rounded-md border border-white/[0.14] bg-white/[0.03] px-3 py-2 text-xs font-medium text-zinc-200 hover:border-white/[0.24]"
+                        >
+                          완료 처리
+                        </button>
+                        <button
+                          style={noDrag}
+                          onClick={() => setFocusedTodoId(null)}
+                          className="rounded-md border border-white/[0.12] px-3 py-2 text-xs text-zinc-400 hover:text-zinc-200 hover:border-white/[0.22]"
+                        >
+                          선택 해제
+                        </button>
+                      </div>
+                    </>
+                  ) : (
+                    <p className="mt-2 text-sm text-zinc-500">집중할 작업을 하나 선택해 세션을 시작하세요.</p>
+                  )}
+                </div>
+
+                {focusCandidates.length > 0 && (
+                  <div>
+                    <div className="text-[11px] uppercase tracking-[0.2em] text-zinc-500 mb-2">Suggested</div>
+                    <div className="flex flex-col gap-2">
+                      {focusCandidates.map((todo) => (
+                        <button
+                          key={todo.id}
+                          style={noDrag}
+                          onClick={() => setFocusedTodoId(todo.id)}
+                          className={cn(
+                            'rounded-lg border px-3 py-2 text-left transition-colors',
+                            focusedTodo?.id === todo.id
+                              ? 'border-teal-300/55 bg-teal-400/10'
+                              : 'border-white/[0.1] bg-white/[0.02] hover:border-white/[0.22] hover:bg-white/[0.04]'
+                          )}
+                        >
+                          <div className="text-sm text-zinc-100 truncate">{todo.title}</div>
+                          <div className="mt-1 text-[11px] text-zinc-500">
+                            {todo.important ? 'Important' : 'Pending'}
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
               <div className="rounded-xl border border-white/[0.14] bg-white/[0.02] p-4">
                 <div className="text-[11px] uppercase tracking-[0.2em] text-zinc-500">Today</div>
