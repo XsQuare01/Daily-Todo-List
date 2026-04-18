@@ -19,6 +19,7 @@ import { readSettings, updateSettings, type ExtraWidget, type WidgetBounds } fro
 
 let tray: Tray | null = null
 let mainWindow: BrowserWindow | null = null
+let desktopWindow: BrowserWindow | null = null
 let widgetWindow: BrowserWindow | null = null
 const extraWidgets = new Map<string, BrowserWindow>()
 
@@ -59,6 +60,12 @@ function buildTrayMenu(): Menu {
       click: () => {
         mainWindow?.show()
         mainWindow?.focus()
+      },
+    },
+    {
+      label: '데스크톱 앱 열기',
+      click: () => {
+        openDesktopWindow()
       },
     },
     { type: 'separator' },
@@ -186,9 +193,10 @@ function createWindow(): void {
   }
 }
 
-const WIDGET_MIN = { width: 220, height: 160 }
+const WIDGET_BASIC = { width: 260, height: 140 }
+const WIDGET_MIN = { width: 240, height: 120 }
 const WIDGET_MAX = { width: 800, height: 900 }
-const WIDGET_DEFAULT = { width: 320, height: 480 }
+const WIDGET_DEFAULT = WIDGET_BASIC
 
 function clampWidgetBoundsToDisplay(b: { x: number; y: number; width: number; height: number }): {
   x: number
@@ -241,6 +249,64 @@ function persistWidgetBounds(): void {
   updateSettings({ widget: { x, y, width, height } })
 }
 
+function getDesktopWindowBounds(): { width: number; height: number; x: number; y: number } {
+  const display = screen.getPrimaryDisplay()
+  const area = display.workArea
+  const width = Math.min(1920, Math.max(1280, area.width - 64))
+  const height = Math.min(1080, Math.max(720, area.height - 64))
+  const x = area.x + Math.round((area.width - width) / 2)
+  const y = area.y + Math.round((area.height - height) / 2)
+  return { width, height, x, y }
+}
+
+function createDesktopWindow(): void {
+  if (desktopWindow && !desktopWindow.isDestroyed()) return
+
+  const bounds = getDesktopWindowBounds()
+  desktopWindow = new BrowserWindow({
+    width: bounds.width,
+    height: bounds.height,
+    x: bounds.x,
+    y: bounds.y,
+    minWidth: 1280,
+    minHeight: 720,
+    frame: false,
+    transparent: false,
+    backgroundColor: '#0a0a0f',
+    resizable: true,
+    skipTaskbar: false,
+    alwaysOnTop: false,
+    title: 'Daily Todo Desktop',
+    show: false,
+    webPreferences: {
+      preload: join(__dirname, '../preload/index.js'),
+      sandbox: false,
+    },
+  })
+
+  desktopWindow.on('close', (e) => {
+    e.preventDefault()
+    desktopWindow?.hide()
+  })
+
+  if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
+    desktopWindow.loadURL(process.env['ELECTRON_RENDERER_URL'] + '?mode=desktop')
+  } else {
+    desktopWindow.loadFile(join(__dirname, '../renderer/index.html'), {
+      query: { mode: 'desktop' },
+    })
+  }
+}
+
+function openDesktopWindow(): void {
+  if (!desktopWindow || desktopWindow.isDestroyed()) {
+    createDesktopWindow()
+  }
+
+  desktopWindow?.show()
+  desktopWindow?.focus()
+}
+
 function createWidgetWindow(): void {
   const saved = readSettings().widget
   const fallbackDisplay = screen.getPrimaryDisplay()
@@ -262,8 +328,8 @@ function createWidgetWindow(): void {
     maxWidth: WIDGET_MAX.width,
     maxHeight: WIDGET_MAX.height,
     frame: false,
-    transparent: false,
-    backgroundColor: '#0a0a0f',
+    transparent: true,
+    backgroundColor: '#00000000',
     resizable: true,
     skipTaskbar: true,
     alwaysOnTop: true,
@@ -346,8 +412,8 @@ function createExtraWidget(cfg: ExtraWidget): void {
     maxWidth: WIDGET_MAX.width,
     maxHeight: WIDGET_MAX.height,
     frame: false,
-    transparent: false,
-    backgroundColor: '#0a0a0f',
+    transparent: true,
+    backgroundColor: '#00000000',
     resizable: true,
     skipTaskbar: true,
     alwaysOnTop: true,
@@ -418,6 +484,10 @@ app.whenReady().then(() => {
     win?.hide()
   })
 
+  ipcMain.on('desktop:open', () => {
+    openDesktopWindow()
+  })
+
   function nodeGet(url: string): Promise<string> {
     return new Promise((resolve, reject) => {
       httpsGet(url, { rejectUnauthorized: false }, (res) => {
@@ -449,6 +519,7 @@ app.whenReady().then(() => {
 
   createTray()
   createWindow()
+  createDesktopWindow()
   createWidgetWindow()
   restoreExtraWidgets()
   applyClickThrough(readSettings().clickThrough ?? false)

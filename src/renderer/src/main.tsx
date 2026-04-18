@@ -5,10 +5,10 @@ import { createRoot } from 'react-dom/client'
 import App from './App'
 import WidgetView from './WidgetView'
 
-const isWidget = new URLSearchParams(window.location.search).get('mode') === 'widget'
+const mode = new URLSearchParams(window.location.search).get('mode')
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    {isWidget ? <WidgetView /> : <App />}
+    {mode === 'widget' ? <WidgetView /> : <App mode={mode === 'desktop' ? 'desktop' : 'popup'} />}
   </StrictMode>
 )
