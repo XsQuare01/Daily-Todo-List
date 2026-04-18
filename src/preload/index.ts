@@ -1,6 +1,7 @@
 import { contextBridge, ipcRenderer } from 'electron'
+import type { WindowApi } from '../shared/window-api'
 
-contextBridge.exposeInMainWorld('api', {
+const api: WindowApi = {
   getTodos: (): Promise<string> => ipcRenderer.invoke('todos:get'),
   saveTodos: (json: string): Promise<void> => ipcRenderer.invoke('todos:save', json),
   hideWindow: (): void => ipcRenderer.send('window:hide'),
@@ -15,4 +16,6 @@ contextBridge.exposeInMainWorld('api', {
     ipcRenderer.on('app:focus-add', listener)
     return () => ipcRenderer.removeListener('app:focus-add', listener)
   },
-})
+}
+
+contextBridge.exposeInMainWorld('api', api)
