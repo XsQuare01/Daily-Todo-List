@@ -4,12 +4,13 @@ import userEvent from '@testing-library/user-event'
 import { Sidebar } from './Sidebar'
 
 describe('Sidebar', () => {
-  it('renders all four filter labels', () => {
+  it('renders all current filter labels', () => {
     render(<Sidebar activeFilter="today" onFilterChange={vi.fn()} />)
-    expect(screen.getByText('오늘')).toBeInTheDocument()
+    expect(screen.getByText('날짜')).toBeInTheDocument()
     expect(screen.getByText('전체')).toBeInTheDocument()
     expect(screen.getByText('중요')).toBeInTheDocument()
     expect(screen.getByText('완료')).toBeInTheDocument()
+    expect(screen.getByText('태그')).toBeInTheDocument()
   })
 
   it('highlights the active filter button', () => {

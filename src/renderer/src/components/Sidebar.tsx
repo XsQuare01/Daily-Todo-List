@@ -1,4 +1,4 @@
-import { Calendar, List, Star, CheckCircle } from 'lucide-react'
+import { FILTERS } from '../lib/filters'
 import { cn } from '../lib/utils'
 import type { FilterType } from '../types/todo'
 
@@ -6,13 +6,6 @@ interface Props {
   activeFilter: FilterType
   onFilterChange: (filter: FilterType) => void
 }
-
-const FILTERS: { key: FilterType; label: string; Icon: React.ComponentType<{ size?: number; className?: string }> }[] = [
-  { key: 'today', label: '오늘', Icon: Calendar },
-  { key: 'all', label: '전체', Icon: List },
-  { key: 'important', label: '중요', Icon: Star },
-  { key: 'completed', label: '완료', Icon: CheckCircle },
-]
 
 export function Sidebar({ activeFilter, onFilterChange }: Props) {
   return (

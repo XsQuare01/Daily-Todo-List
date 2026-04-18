@@ -1,29 +1,16 @@
 import { useState, useMemo, useEffect, useCallback, useRef } from 'react'
 import {
   X,
-  Calendar,
-  List,
-  Star,
-  Archive,
   ChevronLeft,
   ChevronRight,
-  Tag as TagIcon,
 } from 'lucide-react'
 import { TodoList } from './components/TodoList'
 import { AddTodoInput } from './components/AddTodoInput'
 import { useTodos } from './hooks/useTodos'
+import { FILTERS } from './lib/filters'
 import { formatDate, getKSTToday, offsetDate } from './lib/date'
 import { cn } from './lib/utils'
 import type { FilterType } from './types/todo'
-
-const FILTERS: { key: FilterType; label: string; Icon: React.ComponentType<{ size?: number }> }[] =
-  [
-    { key: 'today', label: '날짜', Icon: Calendar },
-    { key: 'all', label: '전체', Icon: List },
-    { key: 'important', label: '중요', Icon: Star },
-    { key: 'completed', label: '완료', Icon: Archive },
-    { key: 'tag', label: '태그', Icon: TagIcon },
-  ]
 
 const drag = { WebkitAppRegion: 'drag' } as React.CSSProperties
 const noDrag = { WebkitAppRegion: 'no-drag' } as React.CSSProperties

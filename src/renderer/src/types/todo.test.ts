@@ -14,8 +14,8 @@ describe('Todo type', () => {
     expect(todo.completed).toBe(false)
   })
 
-  it('FilterType accepts all four values', () => {
-    const filters: FilterType[] = ['today', 'all', 'important', 'completed']
-    expect(filters).toHaveLength(4)
+  it('FilterType accepts all current values', () => {
+    const filters: FilterType[] = ['today', 'all', 'important', 'completed', 'tag']
+    expect(filters).toHaveLength(5)
   })
 })
