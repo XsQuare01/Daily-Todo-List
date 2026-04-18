@@ -45,13 +45,13 @@ export default function WidgetView() {
 
   return (
     <div
-      style={{ ...drag, opacity: hovered ? 1 : 0.76 }}
+      style={{ ...drag, opacity: hovered ? 1 : 0.72 }}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
-      className="w-full h-full flex flex-col overflow-hidden select-none font-sans transition-[opacity,background-color,backdrop-filter] duration-200 rounded-[20px] bg-[#0b0d12]/62 border border-white/[0.14] backdrop-blur-2xl shadow-[0_12px_40px_rgba(0,0,0,0.28)]"
+      className="w-full h-full flex flex-col overflow-hidden select-none font-sans transition-[opacity,background-color,backdrop-filter] duration-200 rounded-[18px] bg-[#0b0d12]/58 border border-white/[0.16] backdrop-blur-2xl shadow-[0_10px_34px_rgba(0,0,0,0.24)]"
     >
       {/* Header */}
-      <div className="flex items-center gap-2 px-3 pt-2.5 pb-1.5">
+      <div className="flex items-center gap-2 px-3 pt-2 pb-1">
         <span className="flex-1 text-[11px] text-white/40 font-medium tracking-wide uppercase truncate">
           {filterTag ? `#${filterTag}` : formatDate(today)}
         </span>
@@ -67,7 +67,7 @@ export default function WidgetView() {
       </div>
 
       {/* Basic widget view */}
-      <div className="flex-1 flex items-center px-3 pb-2.5 min-h-0">
+      <div className="flex-1 flex items-center px-2.5 pb-2 min-h-0">
           {firstPending ? (
             <button
               style={noDrag}
@@ -78,11 +78,11 @@ export default function WidgetView() {
               {firstPending.priority && (
                 <span className={cn('shrink-0 size-[5px] rounded-full', PRIORITY_DOT[firstPending.priority])} />
               )}
-              <span className="flex-1 min-w-0 text-[13px] text-white/75 truncate">
+              <span className="flex-1 min-w-0 text-[12px] text-white/78 truncate">
                 {firstPending.title}
               </span>
               {todayTodos.length > 1 && (
-                <span className="shrink-0 text-[10px] text-white/30 tabular-nums">
+                <span className="shrink-0 text-[10px] text-white/34 tabular-nums">
                   +{todayTodos.length - 1}
                 </span>
               )}
@@ -90,7 +90,7 @@ export default function WidgetView() {
           ) : (
             <div className="mx-auto text-center">
               <div className="text-[12px] text-white/28">할 일 없음</div>
-              <div className="text-[10px] text-white/18 mt-1">필요할 때 데스크톱 앱에서 관리</div>
+              <div className="text-[10px] text-white/18 mt-1">필요할 때 크게 열기</div>
             </div>
           )}
       </div>

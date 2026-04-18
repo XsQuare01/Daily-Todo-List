@@ -193,8 +193,8 @@ function createWindow(): void {
   }
 }
 
-const WIDGET_BASIC = { width: 260, height: 140 }
-const WIDGET_MIN = { width: 240, height: 120 }
+const WIDGET_BASIC = { width: 236, height: 124 }
+const WIDGET_MIN = { width: 220, height: 112 }
 const WIDGET_MAX = { width: 800, height: 900 }
 const WIDGET_DEFAULT = WIDGET_BASIC
 
