@@ -38,6 +38,10 @@ describe('App desktop mode', () => {
     expect(screen.getByText('Daily Todo 관리 화면')).toBeInTheDocument()
     expect(screen.getByText('Desktop Workspace')).toBeInTheDocument()
     expect(screen.getByText('Overview')).toBeInTheDocument()
+    expect(screen.getAllByText('Pending').length).toBeGreaterThan(0)
+    expect(screen.getAllByText('Important').length).toBeGreaterThan(0)
+    expect(screen.queryByText('Completed')).not.toBeInTheDocument()
+    expect(screen.queryByText('Tags')).not.toBeInTheDocument()
 
     await waitFor(() => {
       expect(mockGetTodos).toHaveBeenCalled()

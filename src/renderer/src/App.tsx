@@ -25,6 +25,12 @@ export default function App({ mode = 'popup' }: AppProps) {
   const [activeTag, setActiveTag] = useState<string | null>(null)
   const isDesktop = mode === 'desktop'
 
+  useEffect(() => {
+    if (isDesktop && activeFilter !== 'all' && activeFilter !== 'important') {
+      setActiveFilter('all')
+    }
+  }, [isDesktop, activeFilter])
+
   const {
     todos,
     addTodo,
@@ -122,11 +128,9 @@ export default function App({ mode = 'popup' }: AppProps) {
   const counts = useMemo(
     () => ({
       pending: todos.filter((t) => !t.completed).length,
-      completed: todos.filter((t) => t.completed).length,
       important: todos.filter((t) => t.important && !t.completed).length,
-      tags: allTags.length,
     }),
-    [todos, allTags]
+    [todos]
   )
 
   const filteredTodos = useMemo(() => {
@@ -162,6 +166,29 @@ export default function App({ mode = 'popup' }: AppProps) {
         >
           <Icon size={isDesktop ? 12 : 11} />
           {label}
+        </button>
+      ))}
+    </>
+  )
+
+  const desktopFiltersNav = (
+    <>
+      {[
+        { key: 'all' as const, label: 'Pending' },
+        { key: 'important' as const, label: 'Important' },
+      ].map(({ key, label }) => (
+        <button
+          key={key}
+          onClick={() => setActiveFilter(key)}
+          className={cn(
+            'flex items-center justify-between rounded-2xl px-4 py-3 text-left transition-colors',
+            activeFilter === key
+              ? 'bg-white/[0.07] text-zinc-100 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]'
+              : 'text-zinc-500 hover:text-zinc-300 hover:bg-white/[0.03]'
+          )}
+        >
+          <span className="text-sm font-medium">{label}</span>
+          <span className="text-xs tabular-nums text-zinc-400">{key === 'all' ? counts.pending : counts.important}</span>
         </button>
       ))}
     </>
@@ -255,7 +282,7 @@ export default function App({ mode = 'popup' }: AppProps) {
             <div className="flex-1 min-w-0">
               <div className="text-[13px] uppercase tracking-[0.28em] text-teal-400/80 font-semibold">Desktop Workspace</div>
               <h1 className="mt-3 text-3xl font-semibold tracking-tight text-zinc-100">Daily Todo 관리 화면</h1>
-              <p className="mt-2 text-sm text-zinc-500 max-w-3xl">오늘 일정, 전체 작업, 중요도, 태그, 서브태스크와 타이머까지 한 번에 관리하는 전체 뷰입니다.</p>
+              <p className="mt-2 text-sm text-zinc-500 max-w-3xl">중요한 일과 아직 남은 일을 빠르게 훑고 정리하는 큰 관리 화면입니다.</p>
             </div>
 
             <div className="grid grid-cols-2 gap-3 min-w-[420px]" style={noDrag}>
@@ -264,16 +291,8 @@ export default function App({ mode = 'popup' }: AppProps) {
                 <div className="mt-2 text-2xl font-semibold text-zinc-100 tabular-nums">{counts.pending}</div>
               </div>
               <div className="rounded-2xl border border-white/[0.06] bg-white/[0.03] px-4 py-3">
-                <div className="text-[11px] uppercase tracking-[0.2em] text-zinc-500">Completed</div>
-                <div className="mt-2 text-2xl font-semibold text-zinc-100 tabular-nums">{counts.completed}</div>
-              </div>
-              <div className="rounded-2xl border border-white/[0.06] bg-white/[0.03] px-4 py-3">
                 <div className="text-[11px] uppercase tracking-[0.2em] text-zinc-500">Important</div>
                 <div className="mt-2 text-2xl font-semibold text-zinc-100 tabular-nums">{counts.important}</div>
-              </div>
-              <div className="rounded-2xl border border-white/[0.06] bg-white/[0.03] px-4 py-3">
-                <div className="text-[11px] uppercase tracking-[0.2em] text-zinc-500">Tags</div>
-                <div className="mt-2 text-2xl font-semibold text-zinc-100 tabular-nums">{counts.tags}</div>
               </div>
             </div>
 
@@ -290,17 +309,20 @@ export default function App({ mode = 'popup' }: AppProps) {
           <div className="flex-1 min-h-0 grid grid-cols-[280px_minmax(0,1fr)] gap-6 px-8 py-6">
             <aside className="rounded-[28px] border border-white/[0.06] bg-white/[0.03] p-4 flex flex-col gap-4 overflow-hidden">
               <div>
-                <div className="text-[11px] uppercase tracking-[0.2em] text-zinc-500 mb-3">Views</div>
-                <div className="flex flex-col gap-1.5">{filtersNav}</div>
+                <div className="text-[11px] uppercase tracking-[0.2em] text-zinc-500 mb-3">Focus</div>
+                <div className="flex flex-col gap-2">{desktopFiltersNav}</div>
               </div>
-              {dateNavigator}
-              {tagSelector}
+              <div className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-4">
+                <div className="text-[11px] uppercase tracking-[0.2em] text-zinc-500">Today</div>
+                <div className="mt-2 text-base font-medium text-zinc-100">{formatDate(today)}</div>
+                <p className="mt-3 text-xs leading-5 text-zinc-500">작업 추가와 상세 수정은 오른쪽 리스트에서 바로 처리할 수 있습니다.</p>
+              </div>
             </aside>
 
             <section className="min-w-0 min-h-0 rounded-[32px] border border-white/[0.06] bg-[#0c0f14] shadow-[0_30px_80px_rgba(0,0,0,0.28)] flex flex-col overflow-hidden">
               <div className="shrink-0 px-6 py-4 border-b border-white/[0.05] bg-white/[0.02]">
                 <div className="text-[12px] uppercase tracking-[0.24em] text-zinc-500">Overview</div>
-                <div className="mt-1 text-xl font-semibold text-zinc-100">{activeFilter === 'today' ? formatDate(selectedDate) : FILTERS.find((f) => f.key === activeFilter)?.label ?? '전체'}</div>
+                <div className="mt-1 text-xl font-semibold text-zinc-100">{activeFilter === 'important' ? 'Important' : 'Pending'}</div>
               </div>
               {todoList}
               <div className="shrink-0">{addInput}</div>

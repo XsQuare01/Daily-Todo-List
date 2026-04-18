@@ -569,6 +569,10 @@ app.whenReady().then(() => {
     mainWindow.webContents.send('app:focus-add')
   })
 
+  globalShortcut.register('Control+Shift+M', () => {
+    openDesktopWindow()
+  })
+
   app.on('activate', function () {
     if (BrowserWindow.getAllWindows().length === 0) createWindow()
   })
