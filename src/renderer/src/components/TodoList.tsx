@@ -29,12 +29,18 @@ interface Props {
   onToggleSubtask: (id: string, subtaskId: string) => void
   onDeleteSubtask: (id: string, subtaskId: string) => void
   onReorder: (activeId: string, overId: string) => void
+  selectable?: boolean
+  selectedIds?: string[]
+  onToggleSelect?: (id: string) => void
 }
 
 function SortableTodoItem({
   todo,
   activeTimerId,
   getDisplayElapsed,
+  selectable,
+  selectedIds,
+  onToggleSelect,
   ...props
 }: Omit<Props, 'todos' | 'onReorder'> & { todo: Todo }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
@@ -50,13 +56,16 @@ function SortableTodoItem({
         opacity: isDragging ? 0.35 : 1,
       }}
     >
-      <TodoItem
-        todo={todo}
-        isTimerActive={activeTimerId === todo.id}
-        displayElapsed={getDisplayElapsed(todo)}
-        {...props}
-        dragHandleProps={{ ...attributes, ...listeners }}
-      />
+        <TodoItem
+          todo={todo}
+          isTimerActive={activeTimerId === todo.id}
+          displayElapsed={getDisplayElapsed(todo)}
+          selectable={selectable}
+          selected={selectedIds?.includes(todo.id)}
+          onToggleSelect={onToggleSelect}
+          {...props}
+          dragHandleProps={{ ...attributes, ...listeners }}
+        />
     </div>
   )
 }

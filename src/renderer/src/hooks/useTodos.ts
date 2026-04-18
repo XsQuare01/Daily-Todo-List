@@ -31,6 +31,21 @@ export function useTodos() {
     save(todos.filter((t) => t.id !== id))
   }
 
+  function completeTodos(ids: string[]) {
+    const idSet = new Set(ids)
+    save(todos.map((t) => (idSet.has(t.id) ? { ...t, completed: true } : t)))
+  }
+
+  function setImportantForTodos(ids: string[], important: boolean) {
+    const idSet = new Set(ids)
+    save(todos.map((t) => (idSet.has(t.id) ? { ...t, important } : t)))
+  }
+
+  function deleteTodos(ids: string[]) {
+    const idSet = new Set(ids)
+    save(todos.filter((t) => !idSet.has(t.id)))
+  }
+
   function updateDescription(id: string, description: string) {
     save(todos.map((t) => (t.id === id ? { ...t, description } : t)))
   }
@@ -92,6 +107,9 @@ export function useTodos() {
     toggleComplete,
     toggleImportant,
     deleteTodo,
+    completeTodos,
+    setImportantForTodos,
+    deleteTodos,
     updateDescription,
     updateDueDate,
     updateTags,

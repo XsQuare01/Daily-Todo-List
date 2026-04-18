@@ -90,4 +90,47 @@ describe('useTodos', () => {
     expect(result.current.todos).toHaveLength(0)
     expect(mockSaveTodos).toHaveBeenCalledOnce()
   })
+
+  it('completeTodos marks multiple todos as completed', async () => {
+    const initial = [
+      { id: '1', title: 'A', completed: false, important: false, createdAt: '2026-04-09' },
+      { id: '2', title: 'B', completed: false, important: true, createdAt: '2026-04-09' },
+    ]
+    mockGetTodos.mockResolvedValue(JSON.stringify(initial))
+    mockSaveTodos.mockResolvedValue(undefined)
+
+    const { result } = renderHook(() => useTodos())
+    await act(async () => {})
+
+    await act(async () => {
+      result.current.completeTodos(['1', '2'])
+    })
+
+    expect(result.current.todos.every((todo) => todo.completed)).toBe(true)
+  })
+
+  it('setImportantForTodos and deleteTodos update multiple todos', async () => {
+    const initial = [
+      { id: '1', title: 'A', completed: false, important: false, createdAt: '2026-04-09' },
+      { id: '2', title: 'B', completed: false, important: false, createdAt: '2026-04-09' },
+    ]
+    mockGetTodos.mockResolvedValue(JSON.stringify(initial))
+    mockSaveTodos.mockResolvedValue(undefined)
+
+    const { result } = renderHook(() => useTodos())
+    await act(async () => {})
+
+    await act(async () => {
+      result.current.setImportantForTodos(['1', '2'], true)
+    })
+
+    expect(result.current.todos.every((todo) => todo.important)).toBe(true)
+
+    await act(async () => {
+      result.current.deleteTodos(['1'])
+    })
+
+    expect(result.current.todos).toHaveLength(1)
+    expect(result.current.todos[0].id).toBe('2')
+  })
 })

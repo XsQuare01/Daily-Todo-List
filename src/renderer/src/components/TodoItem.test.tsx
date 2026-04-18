@@ -61,6 +61,13 @@ describe('TodoItem', () => {
     expect(onToggleImportant).toHaveBeenCalledWith('1')
   })
 
+  it('calls onToggleSelect when selection checkbox clicked', async () => {
+    const onToggleSelect = vi.fn()
+    render(<TodoItem todo={todo} {...defaultProps} selectable selected={false} onToggleSelect={onToggleSelect} />)
+    await userEvent.click(screen.getByRole('button', { name: /선택/i }))
+    expect(onToggleSelect).toHaveBeenCalledWith('1')
+  })
+
   it('expands description textarea when title is clicked', async () => {
     render(<TodoItem todo={todo} {...defaultProps} />)
     await userEvent.click(screen.getByText('테스트 할 일'))

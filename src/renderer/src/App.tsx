@@ -24,6 +24,7 @@ export default function App({ mode = 'popup' }: AppProps) {
   const [selectedDate, setSelectedDate] = useState(getKSTToday)
   const [activeTag, setActiveTag] = useState<string | null>(null)
   const [focusedTodoId, setFocusedTodoId] = useState<string | null>(null)
+  const [selectedTodoIds, setSelectedTodoIds] = useState<string[]>([])
   const isDesktop = mode === 'desktop'
 
   useEffect(() => {
@@ -47,6 +48,9 @@ export default function App({ mode = 'popup' }: AppProps) {
     toggleSubtask,
     deleteSubtask,
     reorderTodos,
+    completeTodos,
+    setImportantForTodos,
+    deleteTodos,
   } = useTodos()
 
   // ── Stopwatch state ──
@@ -160,6 +164,10 @@ export default function App({ mode = 'popup' }: AppProps) {
       setFocusedTodoId(null)
     }
   }, [focusedTodoId, todos])
+
+  useEffect(() => {
+    setSelectedTodoIds((current) => current.filter((id) => pendingTodos.some((todo) => todo.id === id)))
+  }, [pendingTodos])
 
   const popupTodos = useMemo(() => {
     switch (activeFilter) {
@@ -290,6 +298,41 @@ export default function App({ mode = 'popup' }: AppProps) {
     onToggleSubtask: toggleSubtask,
     onDeleteSubtask: deleteSubtask,
     onReorder: reorderTodos,
+  }
+
+  function toggleTodoSelection(id: string) {
+    setSelectedTodoIds((current) =>
+      current.includes(id) ? current.filter((item) => item !== id) : [...current, id]
+    )
+  }
+
+  function toggleSelectionFor(ids: string[]) {
+    setSelectedTodoIds((current) => {
+      const allSelected = ids.every((id) => current.includes(id))
+      if (allSelected) {
+        return current.filter((id) => !ids.includes(id))
+      }
+      return Array.from(new Set([...current, ...ids]))
+    })
+  }
+
+  function clearSelection() {
+    setSelectedTodoIds([])
+  }
+
+  function handleBulkComplete() {
+    completeTodos(selectedTodoIds)
+    clearSelection()
+  }
+
+  function handleBulkImportant(next: boolean) {
+    setImportantForTodos(selectedTodoIds, next)
+    clearSelection()
+  }
+
+  function handleBulkDelete() {
+    deleteTodos(selectedTodoIds)
+    clearSelection()
   }
 
   const todoList = (
@@ -426,26 +469,42 @@ export default function App({ mode = 'popup' }: AppProps) {
                 <div className="mt-1 text-xl font-semibold text-zinc-100">Pending &amp; Important</div>
                 <p className="mt-2 text-sm text-zinc-500">큰 화면에서 남은 일과 중요한 일을 동시에 비교하면서 정리할 수 있습니다.</p>
               </div>
+              {selectedTodoIds.length > 0 && (
+                <div className="shrink-0 px-6 py-3 border-b border-white/[0.08] bg-white/[0.025] flex items-center gap-2 flex-wrap">
+                  <span className="text-sm text-zinc-200 font-medium">{selectedTodoIds.length}개 선택됨</span>
+                  <button style={noDrag} onClick={handleBulkComplete} className="rounded-md border border-white/[0.12] px-3 py-1.5 text-xs text-zinc-200 hover:border-white/[0.24]">완료 처리</button>
+                  <button style={noDrag} onClick={() => handleBulkImportant(true)} className="rounded-md border border-amber-300/40 px-3 py-1.5 text-xs text-amber-200 hover:bg-amber-400/10">중요로 표시</button>
+                  <button style={noDrag} onClick={() => handleBulkImportant(false)} className="rounded-md border border-white/[0.12] px-3 py-1.5 text-xs text-zinc-300 hover:border-white/[0.24]">중요 해제</button>
+                  <button style={noDrag} onClick={handleBulkDelete} className="rounded-md border border-red-300/30 px-3 py-1.5 text-xs text-red-200 hover:bg-red-400/10">삭제</button>
+                  <button style={noDrag} onClick={clearSelection} className="ml-auto rounded-md border border-white/[0.12] px-3 py-1.5 text-xs text-zinc-400 hover:text-zinc-200 hover:border-white/[0.24]">선택 해제</button>
+                </div>
+              )}
               <div className="flex-1 min-h-0 grid grid-cols-2 divide-x divide-white/[0.08]">
                 <div className="min-h-0 flex flex-col">
                   <div className="shrink-0 px-5 py-3 border-b border-white/[0.08] bg-white/[0.015]">
                     <div className="text-[11px] uppercase tracking-[0.24em] text-zinc-500">Pending Lane</div>
                     <div className="mt-1 flex items-center justify-between">
                       <div className="text-lg font-semibold text-zinc-100">Pending</div>
-                      <div className="text-xs tabular-nums text-zinc-400">{counts.pending}</div>
+                      <div className="flex items-center gap-2">
+                        <button style={noDrag} onClick={() => toggleSelectionFor(pendingTodos.map((todo) => todo.id))} className="rounded-md border border-white/[0.12] px-2.5 py-1 text-[11px] text-zinc-400 hover:text-zinc-200 hover:border-white/[0.24]">전체 선택</button>
+                        <div className="text-xs tabular-nums text-zinc-400">{counts.pending}</div>
+                      </div>
                     </div>
                   </div>
-                  <TodoList todos={pendingTodos} {...sharedTodoListProps} />
+                  <TodoList todos={pendingTodos} selectable selectedIds={selectedTodoIds} onToggleSelect={toggleTodoSelection} {...sharedTodoListProps} />
                 </div>
                 <div className="min-h-0 flex flex-col">
                   <div className="shrink-0 px-5 py-3 border-b border-white/[0.08] bg-white/[0.015]">
                     <div className="text-[11px] uppercase tracking-[0.24em] text-zinc-500">Important Lane</div>
                     <div className="mt-1 flex items-center justify-between">
                       <div className="text-lg font-semibold text-zinc-100">Important</div>
-                      <div className="text-xs tabular-nums text-zinc-400">{counts.important}</div>
+                      <div className="flex items-center gap-2">
+                        <button style={noDrag} onClick={() => toggleSelectionFor(importantTodos.map((todo) => todo.id))} className="rounded-md border border-white/[0.12] px-2.5 py-1 text-[11px] text-zinc-400 hover:text-zinc-200 hover:border-white/[0.24]">전체 선택</button>
+                        <div className="text-xs tabular-nums text-zinc-400">{counts.important}</div>
+                      </div>
                     </div>
                   </div>
-                  <TodoList todos={importantTodos} {...sharedTodoListProps} />
+                  <TodoList todos={importantTodos} selectable selectedIds={selectedTodoIds} onToggleSelect={toggleTodoSelection} {...sharedTodoListProps} />
                 </div>
               </div>
               <div className="shrink-0">{addInput}</div>

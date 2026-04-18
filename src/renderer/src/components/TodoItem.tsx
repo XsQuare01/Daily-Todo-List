@@ -23,6 +23,9 @@ interface Props {
   onToggleSubtask: (id: string, subtaskId: string) => void
   onDeleteSubtask: (id: string, subtaskId: string) => void
   dragHandleProps?: React.HTMLAttributes<HTMLElement>
+  selectable?: boolean
+  selected?: boolean
+  onToggleSelect?: (id: string) => void
 }
 
 function getDday(dueDate: string): string {
@@ -67,6 +70,9 @@ export function TodoItem({
   onToggleSubtask,
   onDeleteSubtask,
   dragHandleProps,
+  selectable = false,
+  selected = false,
+  onToggleSelect,
 }: Props) {
   const [expanded, setExpanded] = useState(false)
   const [localDesc, setLocalDesc] = useState(todo.description ?? '')
@@ -101,6 +107,21 @@ export function TodoItem({
         >
           <GripVertical size={14} />
         </span>
+
+        {selectable && onToggleSelect && (
+          <button
+            aria-label="선택"
+            onClick={() => onToggleSelect(todo.id)}
+            className={cn(
+              'shrink-0 size-[18px] rounded-[5px] border transition-colors flex items-center justify-center active:scale-[0.96]',
+              selected
+                ? 'border-teal-300/80 bg-teal-400/14 text-teal-200'
+                : 'border-white/[0.14] text-zinc-600 hover:border-white/[0.24]'
+            )}
+          >
+            {selected && <Check size={10} strokeWidth={3} />}
+          </button>
+        )}
 
         {/* Custom checkbox */}
         <button
