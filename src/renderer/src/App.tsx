@@ -133,7 +133,13 @@ export default function App({ mode = 'popup' }: AppProps) {
     [todos]
   )
 
-  const filteredTodos = useMemo(() => {
+  const pendingTodos = useMemo(() => todos.filter((t) => !t.completed), [todos])
+  const importantTodos = useMemo(
+    () => todos.filter((t) => t.important && !t.completed),
+    [todos]
+  )
+
+  const popupTodos = useMemo(() => {
     switch (activeFilter) {
       case 'today':
         return todos.filter((t) => t.createdAt === selectedDate)
@@ -246,24 +252,28 @@ export default function App({ mode = 'popup' }: AppProps) {
     </div>
   )
 
+  const sharedTodoListProps = {
+    activeTimerId,
+    getDisplayElapsed,
+    onToggleComplete: handleToggleComplete,
+    onToggleImportant: toggleImportant,
+    onDelete: deleteTodo,
+    onUpdateDescription: updateDescription,
+    onUpdateDueDate: updateDueDate,
+    onUpdateTags: updateTags,
+    onToggleTimer: toggleTimer,
+    onResetTimer: handleResetTimer,
+    onUpdatePriority: updatePriority,
+    onAddSubtask: addSubtask,
+    onToggleSubtask: toggleSubtask,
+    onDeleteSubtask: deleteSubtask,
+    onReorder: reorderTodos,
+  }
+
   const todoList = (
     <TodoList
-      todos={filteredTodos}
-      activeTimerId={activeTimerId}
-      getDisplayElapsed={getDisplayElapsed}
-      onToggleComplete={handleToggleComplete}
-      onToggleImportant={toggleImportant}
-      onDelete={deleteTodo}
-      onUpdateDescription={updateDescription}
-      onUpdateDueDate={updateDueDate}
-      onUpdateTags={updateTags}
-      onToggleTimer={toggleTimer}
-      onResetTimer={handleResetTimer}
-      onUpdatePriority={updatePriority}
-      onAddSubtask={addSubtask}
-      onToggleSubtask={toggleSubtask}
-      onDeleteSubtask={deleteSubtask}
-      onReorder={reorderTodos}
+      todos={popupTodos}
+      {...sharedTodoListProps}
     />
   )
 
@@ -322,9 +332,31 @@ export default function App({ mode = 'popup' }: AppProps) {
             <section className="min-w-0 min-h-0 rounded-[20px] border border-white/[0.14] bg-[#0c0f14] shadow-[0_30px_80px_rgba(0,0,0,0.28)] flex flex-col overflow-hidden">
               <div className="shrink-0 px-6 py-4 border-b border-white/[0.12] bg-white/[0.02]">
                 <div className="text-[12px] uppercase tracking-[0.24em] text-zinc-500">Overview</div>
-                <div className="mt-1 text-xl font-semibold text-zinc-100">{activeFilter === 'important' ? 'Important' : 'Pending'}</div>
+                <div className="mt-1 text-xl font-semibold text-zinc-100">Pending &amp; Important</div>
+                <p className="mt-2 text-sm text-zinc-500">큰 화면에서 남은 일과 중요한 일을 동시에 비교하면서 정리할 수 있습니다.</p>
               </div>
-              {todoList}
+              <div className="flex-1 min-h-0 grid grid-cols-2 divide-x divide-white/[0.08]">
+                <div className="min-h-0 flex flex-col">
+                  <div className="shrink-0 px-5 py-3 border-b border-white/[0.08] bg-white/[0.015]">
+                    <div className="text-[11px] uppercase tracking-[0.24em] text-zinc-500">Pending Lane</div>
+                    <div className="mt-1 flex items-center justify-between">
+                      <div className="text-lg font-semibold text-zinc-100">Pending</div>
+                      <div className="text-xs tabular-nums text-zinc-400">{counts.pending}</div>
+                    </div>
+                  </div>
+                  <TodoList todos={pendingTodos} {...sharedTodoListProps} />
+                </div>
+                <div className="min-h-0 flex flex-col">
+                  <div className="shrink-0 px-5 py-3 border-b border-white/[0.08] bg-white/[0.015]">
+                    <div className="text-[11px] uppercase tracking-[0.24em] text-zinc-500">Important Lane</div>
+                    <div className="mt-1 flex items-center justify-between">
+                      <div className="text-lg font-semibold text-zinc-100">Important</div>
+                      <div className="text-xs tabular-nums text-zinc-400">{counts.important}</div>
+                    </div>
+                  </div>
+                  <TodoList todos={importantTodos} {...sharedTodoListProps} />
+                </div>
+              </div>
               <div className="shrink-0">{addInput}</div>
             </section>
           </div>

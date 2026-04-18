@@ -40,6 +40,8 @@ describe('App desktop mode', () => {
     expect(screen.getByText('Overview')).toBeInTheDocument()
     expect(screen.getAllByText('Pending').length).toBeGreaterThan(0)
     expect(screen.getAllByText('Important').length).toBeGreaterThan(0)
+    expect(screen.getByText('Pending Lane')).toBeInTheDocument()
+    expect(screen.getByText('Important Lane')).toBeInTheDocument()
     expect(screen.queryByText('Completed')).not.toBeInTheDocument()
     expect(screen.queryByText('Tags')).not.toBeInTheDocument()
 
