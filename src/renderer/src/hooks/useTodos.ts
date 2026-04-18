@@ -1,9 +1,6 @@
 import { useState, useEffect } from 'react'
+import { getKSTToday } from '../lib/date'
 import type { Todo, Priority, Subtask } from '../types/todo'
-
-function today(): string {
-  return new Date().toISOString().slice(0, 10)
-}
 
 export function useTodos() {
   const [todos, setTodos] = useState<Todo[]>([])
@@ -29,7 +26,7 @@ export function useTodos() {
       title: title.trim(),
       completed: false,
       important: false,
-      createdAt: date ?? today(),
+      createdAt: date ?? getKSTToday(),
       ...(tags && tags.length > 0 ? { tags } : {}),
     }
     save([...todos, newTodo])

@@ -1,22 +1,11 @@
 import { useState, useRef, useEffect, KeyboardEvent } from 'react'
 import { Plus } from 'lucide-react'
+import { parseTodoInput } from '../lib/todo-input'
 import { cn } from '../lib/utils'
 
 interface Props {
   onAdd: (title: string, tags?: string[]) => void
   focusSignal?: number
-}
-
-function parseInput(raw: string): { title: string; tags: string[] } {
-  const tags: string[] = []
-  const title = raw
-    .replace(/#([^\s#]+)/g, (_, tag: string) => {
-      tags.push(tag)
-      return ''
-    })
-    .replace(/\s+/g, ' ')
-    .trim()
-  return { title, tags }
 }
 
 export function AddTodoInput({ onAdd, focusSignal }: Props) {
@@ -32,7 +21,7 @@ export function AddTodoInput({ onAdd, focusSignal }: Props) {
   function handleAdd() {
     const trimmed = value.trim()
     if (!trimmed) return
-    const { title, tags } = parseInput(trimmed)
+    const { title, tags } = parseTodoInput(trimmed)
     if (title) {
       onAdd(title, tags.length > 0 ? tags : undefined)
       setValue('')

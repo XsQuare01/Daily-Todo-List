@@ -1,39 +1,17 @@
 import { useState, useEffect, KeyboardEvent } from 'react'
 import { Check, Plus, Minimize2, Maximize2 } from 'lucide-react'
+import { formatDate, getKSTToday } from './lib/date'
+import { parseTodoInput } from './lib/todo-input'
 import { cn } from './lib/utils'
 import type { Todo, Priority } from './types/todo'
 
 const drag = { WebkitAppRegion: 'drag' } as React.CSSProperties
 const noDrag = { WebkitAppRegion: 'no-drag' } as React.CSSProperties
 
-function getKSTToday(): string {
-  const kst = new Date(Date.now() + 9 * 60 * 60 * 1000)
-  return kst.toISOString().slice(0, 10)
-}
-
-const WEEKDAYS = ['일', '월', '화', '수', '목', '금', '토']
-
-function formatDate(isoDate: string): string {
-  const d = new Date(isoDate + 'T00:00:00')
-  return `${d.getMonth() + 1}월 ${d.getDate()}일 (${WEEKDAYS[d.getDay()]})`
-}
-
 const PRIORITY_DOT: Record<Priority, string> = {
   high: 'bg-red-400',
   medium: 'bg-amber-400',
   low: 'bg-blue-400',
-}
-
-function parseInput(raw: string): { title: string; tags: string[] } {
-  const tags: string[] = []
-  const title = raw
-    .replace(/#([^\s#]+)/g, (_, tag: string) => {
-      tags.push(tag)
-      return ''
-    })
-    .replace(/\s+/g, ' ')
-    .trim()
-  return { title, tags }
 }
 
 const filterTag = new URLSearchParams(window.location.search).get('tag') ?? null
@@ -81,7 +59,7 @@ export default function WidgetView() {
   function handleAdd() {
     const trimmed = draft.trim()
     if (!trimmed) return
-    const { title, tags } = parseInput(trimmed)
+    const { title, tags } = parseTodoInput(trimmed)
     if (!title) return
     const mergedTags = filterTag
       ? Array.from(new Set([filterTag, ...tags]))

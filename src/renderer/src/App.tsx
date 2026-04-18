@@ -12,6 +12,7 @@ import {
 import { TodoList } from './components/TodoList'
 import { AddTodoInput } from './components/AddTodoInput'
 import { useTodos } from './hooks/useTodos'
+import { formatDate, getKSTToday, offsetDate } from './lib/date'
 import { cn } from './lib/utils'
 import type { FilterType } from './types/todo'
 
@@ -26,34 +27,6 @@ const FILTERS: { key: FilterType; label: string; Icon: React.ComponentType<{ siz
 
 const drag = { WebkitAppRegion: 'drag' } as React.CSSProperties
 const noDrag = { WebkitAppRegion: 'no-drag' } as React.CSSProperties
-
-function toISODate(date: Date): string {
-  const y = date.getFullYear()
-  const m = String(date.getMonth() + 1).padStart(2, '0')
-  const d = String(date.getDate()).padStart(2, '0')
-  return `${y}-${m}-${d}`
-}
-
-function getKSTToday(): string {
-  const kst = new Date(Date.now() + 9 * 60 * 60 * 1000)
-  return kst.toISOString().slice(0, 10)
-}
-
-function offsetDate(isoDate: string, days: number): string {
-  const d = new Date(isoDate + 'T00:00:00')
-  d.setDate(d.getDate() + days)
-  return toISODate(d)
-}
-
-const WEEKDAYS = ['일', '월', '화', '수', '목', '금', '토']
-
-function formatDate(isoDate: string): string {
-  const d = new Date(isoDate + 'T00:00:00')
-  const month = d.getMonth() + 1
-  const day = d.getDate()
-  const weekday = WEEKDAYS[d.getDay()]
-  return `${month}월 ${day}일 (${weekday})`
-}
 
 export default function App() {
   const [activeFilter, setActiveFilter] = useState<FilterType>('today')
