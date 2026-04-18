@@ -41,7 +41,7 @@ export default function WidgetView() {
       if (date) setToday(date)
     }).catch(() => {})
 
-    window.api.onTodosUpdated((json) => {
+    return window.api.onTodosUpdated((json) => {
       try { setTodos(JSON.parse(json)) } catch { /* empty */ }
     })
   }, [])

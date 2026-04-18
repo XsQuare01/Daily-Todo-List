@@ -91,7 +91,7 @@ export default function App() {
   // Focus add input when main process sends app:focus-add (Ctrl+Shift+N)
   const [focusAddSignal, setFocusAddSignal] = useState(0)
   useEffect(() => {
-    window.api.onFocusAdd(() => setFocusAddSignal((n) => n + 1))
+    return window.api.onFocusAdd(() => setFocusAddSignal((n) => n + 1))
   }, [])
 
   useEffect(() => {

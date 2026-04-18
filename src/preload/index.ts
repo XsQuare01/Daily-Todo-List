@@ -5,10 +5,14 @@ contextBridge.exposeInMainWorld('api', {
   saveTodos: (json: string): Promise<void> => ipcRenderer.invoke('todos:save', json),
   hideWindow: (): void => ipcRenderer.send('window:hide'),
   getNetworkDate: (): Promise<string | null> => ipcRenderer.invoke('date:get-network'),
-  onTodosUpdated: (callback: (json: string) => void): void => {
-    ipcRenderer.on('todos:updated', (_event, json: string) => callback(json))
+  onTodosUpdated: (callback: (json: string) => void): (() => void) => {
+    const listener = (_event: Electron.IpcRendererEvent, json: string): void => callback(json)
+    ipcRenderer.on('todos:updated', listener)
+    return () => ipcRenderer.removeListener('todos:updated', listener)
   },
-  onFocusAdd: (callback: () => void): void => {
-    ipcRenderer.on('app:focus-add', () => callback())
+  onFocusAdd: (callback: () => void): (() => void) => {
+    const listener = (): void => callback()
+    ipcRenderer.on('app:focus-add', listener)
+    return () => ipcRenderer.removeListener('app:focus-add', listener)
   },
 })
