@@ -153,13 +153,14 @@ export default function App({ mode = 'popup' }: AppProps) {
           key={key}
           onClick={() => setActiveFilter(key)}
           className={cn(
-            'flex items-center gap-2 px-3 py-2 rounded-xl text-sm transition-colors text-left',
+            'flex items-center rounded-xl transition-colors text-left',
+            isDesktop ? 'gap-2 px-3 py-2 text-sm' : 'gap-1.5 px-2 py-1.5 text-[12px]',
             activeFilter === key
               ? 'bg-white/[0.07] text-zinc-100 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]'
               : 'text-zinc-500 hover:text-zinc-300 hover:bg-white/[0.03]'
           )}
         >
-          <Icon size={12} />
+          <Icon size={isDesktop ? 12 : 11} />
           {label}
         </button>
       ))}
@@ -327,7 +328,7 @@ export default function App({ mode = 'popup' }: AppProps) {
           <X size={12} />
         </button>
       </div>
-      <div className="flex items-center gap-0.5 px-2.5 py-2 border-b border-white/[0.04] shrink-0">{filtersNav}</div>
+      <div className="flex items-center gap-0.5 px-2 py-1.5 border-b border-white/[0.04] shrink-0">{filtersNav}</div>
       {dateNavigator}
       {tagSelector}
       {todoList}

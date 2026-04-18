@@ -289,6 +289,10 @@ function createDesktopWindow(): void {
     desktopWindow?.hide()
   })
 
+  desktopWindow.on('closed', () => {
+    desktopWindow = null
+  })
+
   if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
     desktopWindow.loadURL(process.env['ELECTRON_RENDERER_URL'] + '?mode=desktop')
   } else {
@@ -303,8 +307,25 @@ function openDesktopWindow(): void {
     createDesktopWindow()
   }
 
-  desktopWindow?.show()
-  desktopWindow?.focus()
+  widgetWindow?.hide()
+  mainWindow?.hide()
+
+  if (!desktopWindow) return
+
+  const reveal = (): void => {
+    if (!desktopWindow || desktopWindow.isDestroyed()) return
+    if (desktopWindow.isMinimized()) desktopWindow.restore()
+    desktopWindow.show()
+    desktopWindow.focus()
+    desktopWindow.moveTop()
+  }
+
+  if (desktopWindow.webContents.isLoadingMainFrame()) {
+    desktopWindow.once('ready-to-show', reveal)
+    return
+  }
+
+  reveal()
 }
 
 function createWidgetWindow(): void {
