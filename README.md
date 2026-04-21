@@ -1,6 +1,17 @@
 # Daily Todo List
 
-An Electron desktop app for managing daily todos, built with React and TypeScript.
+React + TypeScript + Electron으로 만든 데스크톱 할 일 앱입니다.
+
+트레이 기반 메인 팝업, 항상 위에 떠 있는 위젯, 태그별 추가 위젯, 데스크톱 작업 창을 함께 제공해서 하루 할 일을 빠르게 확인하고 정리할 수 있습니다.
+
+## 빠른 요약
+
+- **실행 형태**: Electron 데스크톱 앱
+- **주요 UI**: 트레이 팝업, 위젯, 태그 위젯, 데스크톱 작업 창
+- **데이터 저장 위치**: `%APPDATA%/daily-todo-list/`
+- **Windows 설치 파일 생성**: `npm run build:win`
+- **자동 실행 정책**: 기본 OFF, 트레이 메뉴에서 직접 ON
+- **릴리스 기준**: `package.json` 버전 + Git 태그 + GitHub Release
 
 ## 위젯 사용 설명서
 
@@ -74,11 +85,11 @@ Daily Todo는 두 개의 창으로 동작합니다.
 
 ---
 
-## Recommended IDE Setup
+## 개발 환경
 
 - [VSCode](https://code.visualstudio.com/) + [ESLint](https://marketplace.visualstudio.com/items?itemName=dbaeumer.vscode-eslint) + [Prettier](https://marketplace.visualstudio.com/items?itemName=esbenp.prettier-vscode)
 
-## Project Setup
+## 프로젝트 실행
 
 ### Install
 
@@ -92,16 +103,56 @@ $ npm install
 $ npm run dev
 ```
 
-### Windows 릴리스
+### Production Preview
 
-Windows 배포본은 아래 순서로 만듭니다.
+```bash
+$ npm start
+```
 
-1. `npm run build:win` 실행
-2. 생성된 설치 파일은 `dist/` 아래에 출력됨
-3. 최초 설치 시 자동 시작은 기본값이 꺼져 있음
-4. 트레이 메뉴에서 **"시작 시 자동 실행"** 을 켜야 다음 로그인부터 자동 시작됨
+## Windows 배포 가이드
 
-릴리스 버전은 `package.json` 버전을 기준으로 하며, 같은 버전의 Git 태그와 GitHub Release를 함께 맞춥니다.
+### 1. 설치 파일 만들기
+
+```bash
+$ npm run build:win
+```
+
+빌드가 끝나면 `dist/`에 설치 파일과 업데이트 메타데이터가 생성됩니다.
+
+- `dist/daily-todo-list-<version>-setup.exe`
+- `dist/latest.yml`
+
+### 2. 자동 실행 정책
+
+이 앱은 설치 직후 **자동 실행을 강제로 켜지 않습니다.**
+
+자동 실행이 필요하면 앱 실행 후 트레이 메뉴에서 **"시작 시 자동 실행"** 을 직접 체크해야 합니다. 즉, 기본값은 OFF이고 사용자 선택으로만 ON 됩니다.
+
+### 3. 로컬 확인 항목
+
+설치 파일을 만든 뒤에는 아래 항목을 확인하면 됩니다.
+
+1. 설치 프로그램이 정상 실행되는지
+2. 설치 후 앱이 정상 실행되는지
+3. 트레이 아이콘이 보이는지
+4. **"시작 시 자동 실행"** 이 기본 해제 상태인지
+5. 필요 시 자동 실행을 켰을 때 다음 로그인부터 동작하는지
+
+### 4. 버전 관리와 릴리스
+
+릴리스 버전은 `package.json`의 `version`을 기준으로 관리합니다.
+
+배포 시에는 아래 세 가지를 같은 버전으로 맞춥니다.
+
+1. `package.json` 버전
+2. Git 태그 (`v1.0.0` 형태)
+3. GitHub Release
+
+자세한 운영 절차는 `docs/release/windows-release.md`를 참고하면 됩니다.
+
+### 5. 기타 플랫폼 빌드
+
+프로젝트에는 Electron Builder 설정이 포함되어 있어서 macOS / Linux 빌드도 가능합니다.
 
 ### Build
 
