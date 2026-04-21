@@ -92,6 +92,17 @@ $ npm install
 $ npm run dev
 ```
 
+### Windows 릴리스
+
+Windows 배포본은 아래 순서로 만듭니다.
+
+1. `npm run build:win` 실행
+2. 생성된 설치 파일은 `dist/` 아래에 출력됨
+3. 최초 설치 시 자동 시작은 기본값이 꺼져 있음
+4. 트레이 메뉴에서 **"시작 시 자동 실행"** 을 켜야 다음 로그인부터 자동 시작됨
+
+릴리스 버전은 `package.json` 버전을 기준으로 하며, 같은 버전의 Git 태그와 GitHub Release를 함께 맞춥니다.
+
 ### Build
 
 ```bash
