@@ -4,6 +4,17 @@ React + TypeScript + Electron으로 만든 데스크톱 할 일 앱입니다.
 
 트레이 기반 메인 팝업, 항상 위에 떠 있는 위젯, 태그별 추가 위젯, 데스크톱 작업 창을 함께 제공해서 하루 할 일을 빠르게 확인하고 정리할 수 있습니다.
 
+## 다운로드
+
+### Windows 설치 파일 받기
+
+- **최신 버전 다운로드**: https://github.com/XsQuare01/Daily-Todo-List/releases/latest
+- **릴리스 목록 보기**: https://github.com/XsQuare01/Daily-Todo-List/releases
+
+릴리스 페이지에서 `daily-todo-list-<version>-setup.exe` 파일을 받으면 바로 설치할 수 있습니다.
+
+> 아직 GitHub Release가 게시되지 않았다면 위 링크에는 다운로드 파일이 보이지 않을 수 있습니다. 그 경우에는 먼저 릴리스를 발행해야 합니다.
+
 ## 빠른 요약
 
 - **실행 형태**: Electron 데스크톱 앱
