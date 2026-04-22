@@ -509,6 +509,12 @@ app.whenReady().then(() => {
     openDesktopWindow()
   })
 
+  ipcMain.on('link:open-external', (_event, url: string) => {
+    if (typeof url === 'string' && /^https?:\/\//.test(url)) {
+      shell.openExternal(url)
+    }
+  })
+
   function nodeGet(url: string): Promise<string> {
     return new Promise((resolve, reject) => {
       httpsGet(url, { rejectUnauthorized: false }, (res) => {

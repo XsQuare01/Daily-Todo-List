@@ -2,6 +2,7 @@ import { useState, KeyboardEvent } from 'react'
 import {
   Star, X, Check, CalendarClock, Tag, GripVertical,
   Play, Pause, Timer, RotateCcw, Plus, Circle, Trash2,
+  ExternalLink,
 } from 'lucide-react'
 import { cn } from '../lib/utils'
 import type { Todo, Priority } from '../types/todo'
@@ -19,6 +20,7 @@ interface Props {
   onToggleTimer: (id: string) => void
   onResetTimer: (id: string) => void
   onUpdatePriority: (id: string, priority: Priority | undefined) => void
+  onUpdateLink: (id: string, link: string) => void
   onAddSubtask: (id: string, title: string) => void
   onToggleSubtask: (id: string, subtaskId: string) => void
   onDeleteSubtask: (id: string, subtaskId: string) => void
@@ -66,6 +68,7 @@ export function TodoItem({
   onToggleTimer,
   onResetTimer,
   onUpdatePriority,
+  onUpdateLink,
   onAddSubtask,
   onToggleSubtask,
   onDeleteSubtask,
@@ -78,6 +81,7 @@ export function TodoItem({
   const [localDesc, setLocalDesc] = useState(todo.description ?? '')
   const [localDueDate, setLocalDueDate] = useState(todo.dueDate ?? '')
   const [localTags, setLocalTags] = useState((todo.tags ?? []).join(', '))
+  const [localLink, setLocalLink] = useState(todo.link ?? '')
   const [subtaskInput, setSubtaskInput] = useState('')
 
   const dday = todo.dueDate ? getDday(todo.dueDate) : null
@@ -166,6 +170,18 @@ export function TodoItem({
               >
                 {dday}
               </span>
+            )}
+            {todo.link && !todo.completed && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation()
+                  window.api.openExternal(todo.link!)
+                }}
+                className="shrink-0 text-sky-400/80 hover:text-sky-300 transition-colors"
+                aria-label="링크 열기"
+              >
+                <ExternalLink size={11} />
+              </button>
             )}
             {(hasElapsed || isTimerActive) && !todo.completed && (
               <span
@@ -334,6 +350,37 @@ export function TodoItem({
               className="flex-1 bg-transparent text-zinc-400 text-xs outline-none placeholder-zinc-500"
               spellCheck={false}
             />
+          </div>
+
+          {/* Link */}
+          <div className="flex items-center gap-1.5">
+            <ExternalLink size={11} className="text-zinc-600 shrink-0" />
+            <input
+              type="url"
+              placeholder="링크 (PR, Issue 등)"
+              value={localLink}
+              onChange={(e) => setLocalLink(e.target.value)}
+              onBlur={() => onUpdateLink(todo.id, localLink.trim())}
+              className="flex-1 bg-transparent text-zinc-400 text-xs outline-none placeholder-zinc-500"
+              spellCheck={false}
+            />
+            {localLink.trim() && (
+              <button
+                onClick={() => window.api.openExternal(localLink.trim())}
+                className="text-sky-400/80 hover:text-sky-300 transition-colors"
+                aria-label="링크 열기"
+              >
+                <ExternalLink size={10} />
+              </button>
+            )}
+            {localLink.trim() && (
+              <button
+                onClick={() => { setLocalLink(''); onUpdateLink(todo.id, '') }}
+                className="text-zinc-500 hover:text-zinc-400"
+              >
+                <X size={10} />
+              </button>
+            )}
           </div>
 
           {/* Timer detail */}

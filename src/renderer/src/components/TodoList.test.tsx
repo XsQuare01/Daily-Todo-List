@@ -20,6 +20,7 @@ const defaultProps = {
   onToggleTimer: vi.fn(),
   onResetTimer: vi.fn(),
   onUpdatePriority: vi.fn(),
+  onUpdateLink: vi.fn(),
   onAddSubtask: vi.fn(),
   onToggleSubtask: vi.fn(),
   onDeleteSubtask: vi.fn(),

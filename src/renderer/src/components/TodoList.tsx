@@ -25,6 +25,7 @@ interface Props {
   onToggleTimer: (id: string) => void
   onResetTimer: (id: string) => void
   onUpdatePriority: (id: string, priority: Priority | undefined) => void
+  onUpdateLink: (id: string, link: string) => void
   onAddSubtask: (id: string, title: string) => void
   onToggleSubtask: (id: string, subtaskId: string) => void
   onDeleteSubtask: (id: string, subtaskId: string) => void

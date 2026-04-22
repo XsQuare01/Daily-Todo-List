@@ -17,6 +17,7 @@ const api: WindowApi = {
     ipcRenderer.on('app:focus-add', listener)
     return () => ipcRenderer.removeListener('app:focus-add', listener)
   },
+  openExternal: (url: string): void => ipcRenderer.send('link:open-external', url),
 }
 
 contextBridge.exposeInMainWorld('api', api)

@@ -66,6 +66,10 @@ export function useTodos() {
     save(todos.map((t) => (t.id === id ? { ...t, priority } : t)))
   }
 
+  function updateLink(id: string, link: string) {
+    save(todos.map((t) => (t.id === id ? { ...t, link: link || undefined } : t)))
+  }
+
   function addSubtask(id: string, title: string) {
     const sub: Subtask = { id: crypto.randomUUID(), title: title.trim(), completed: false }
     save(todos.map((t) => (t.id === id ? { ...t, subtasks: [...(t.subtasks ?? []), sub] } : t)))
@@ -115,6 +119,7 @@ export function useTodos() {
     updateTags,
     updateElapsed,
     updatePriority,
+    updateLink,
     addSubtask,
     toggleSubtask,
     deleteSubtask,

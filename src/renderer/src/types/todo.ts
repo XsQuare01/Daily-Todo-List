@@ -18,6 +18,7 @@ export interface Todo {
   elapsedMs?: number  // total elapsed milliseconds from stopwatch
   priority?: Priority
   subtasks?: Subtask[]
+  link?: string       // external URL (PR, issue, etc.)
 }
 
 export type FilterType = 'today' | 'all' | 'important' | 'completed' | 'tag'
