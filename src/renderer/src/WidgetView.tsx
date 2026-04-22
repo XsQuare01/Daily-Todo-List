@@ -1,7 +1,8 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef, KeyboardEvent } from 'react'
 import { Maximize2 } from 'lucide-react'
 import { formatDate, getKSTToday } from './lib/date'
-import { loadTodos, persistTodos, subscribeTodos } from './lib/todos-ipc'
+import { loadTodos, persistTodos, createTodo, subscribeTodos } from './lib/todos-ipc'
+import { parseTodoInput } from './lib/todo-input'
 import { cn } from './lib/utils'
 import type { Todo, Priority } from './types/todo'
 
@@ -20,6 +21,9 @@ export default function WidgetView() {
   const [todos, setTodos] = useState<Todo[]>([])
   const [today, setToday] = useState(getKSTToday)
   const [hovered, setHovered] = useState(false)
+  const [ctxMenu, setCtxMenu] = useState<{ x: number; y: number } | null>(null)
+  const [addMode, setAddMode] = useState(false)
+  const addInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     loadTodos().then(setTodos)
@@ -41,13 +45,44 @@ export default function WidgetView() {
     void persistTodos(updated)
   }
 
+  function handleContextMenu(e: React.MouseEvent) {
+    e.preventDefault()
+    setCtxMenu({ x: e.clientX, y: e.clientY })
+  }
+
+  function openAddMode() {
+    setCtxMenu(null)
+    setAddMode(true)
+    requestAnimationFrame(() => addInputRef.current?.focus())
+  }
+
+  function handleAddKeyDown(e: KeyboardEvent<HTMLInputElement>) {
+    if (e.key === 'Escape') {
+      setAddMode(false)
+      return
+    }
+    if (e.key !== 'Enter') return
+    const raw = (e.target as HTMLInputElement).value.trim()
+    if (!raw) return
+    const { title, tags } = parseTodoInput(raw)
+    if (!title) return
+    const newTodo = createTodo(title, today, tags.length > 0 ? tags : filterTag ? [filterTag] : undefined)
+    const updated = [...todos, newTodo]
+    setTodos(updated)
+    void persistTodos(updated)
+    ;(e.target as HTMLInputElement).value = ''
+    setAddMode(false)
+  }
+
   const firstPending = todayTodos[0]
 
   return (
     <div
       style={{ ...drag, opacity: hovered ? 1 : 0.72 }}
       onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
+      onMouseLeave={() => { setHovered(false); setCtxMenu(null) }}
+      onContextMenu={handleContextMenu}
+      onClick={() => setCtxMenu(null)}
       className="w-full h-full flex flex-col overflow-hidden select-none font-sans transition-[opacity,background-color,backdrop-filter] duration-200 rounded-[18px] bg-[#0b0d12]/58 border border-white/[0.16] backdrop-blur-2xl shadow-[0_10px_34px_rgba(0,0,0,0.24)]"
     >
       {/* Header */}
@@ -94,6 +129,37 @@ export default function WidgetView() {
             </div>
           )}
       </div>
+
+      {/* Inline add input */}
+      {addMode && (
+        <div style={noDrag} className="shrink-0 px-2.5 pb-2">
+          <input
+            ref={addInputRef}
+            type="text"
+            placeholder="할 일 입력... (#태그)"
+            spellCheck={false}
+            onKeyDown={handleAddKeyDown}
+            onBlur={() => setAddMode(false)}
+            className="w-full h-7 px-2 rounded-lg bg-white/[0.06] border border-white/[0.14] text-[11px] text-white/80 placeholder-white/30 outline-none focus:border-teal-400/50"
+          />
+        </div>
+      )}
+
+      {/* Context menu */}
+      {ctxMenu && (
+        <div
+          style={{ ...noDrag, position: 'fixed', left: ctxMenu.x, top: ctxMenu.y }}
+          className="z-50 min-w-[120px] py-1 rounded-lg bg-[#1a1d24] border border-white/[0.14] shadow-[0_8px_24px_rgba(0,0,0,0.4)]"
+        >
+          <button
+            onMouseDown={(e) => e.preventDefault()}
+            onClick={openAddMode}
+            className="w-full text-left px-3 py-1.5 text-[11px] text-white/70 hover:bg-white/[0.08] hover:text-white/90 transition-colors"
+          >
+            할 일 추가
+          </button>
+        </div>
+      )}
     </div>
   )
 }
