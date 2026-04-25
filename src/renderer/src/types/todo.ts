@@ -22,3 +22,4 @@ export interface Todo {
 }
 
 export type FilterType = 'today' | 'all' | 'important' | 'completed' | 'tag'
+export type SortType = 'manual' | 'priority' | 'dueDate' | 'createdAt'

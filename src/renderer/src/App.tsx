@@ -3,14 +3,17 @@ import {
   X,
   ChevronLeft,
   ChevronRight,
+  Search,
+  ArrowUpDown,
 } from 'lucide-react'
 import { TodoList } from './components/TodoList'
 import { AddTodoInput } from './components/AddTodoInput'
 import { useTodos } from './hooks/useTodos'
 import { FILTERS } from './lib/filters'
+import { sortTodos, SORT_LABELS, SORT_CYCLE } from './lib/sort'
 import { formatDate, getKSTToday, offsetDate } from './lib/date'
 import { cn } from './lib/utils'
-import type { FilterType } from './types/todo'
+import type { FilterType, SortType } from './types/todo'
 
 const drag = { WebkitAppRegion: 'drag' } as React.CSSProperties
 const noDrag = { WebkitAppRegion: 'no-drag' } as React.CSSProperties
@@ -25,6 +28,11 @@ export default function App({ mode = 'popup' }: AppProps) {
   const [activeTag, setActiveTag] = useState<string | null>(null)
   const [focusedTodoId, setFocusedTodoId] = useState<string | null>(null)
   const [selectedTodoIds, setSelectedTodoIds] = useState<string[]>([])
+  const [searchQuery, setSearchQuery] = useState('')
+  const [showSearch, setShowSearch] = useState(false)
+  const [sortType, setSortType] = useState<SortType>(
+    () => (localStorage.getItem('sortType') as SortType) ?? 'manual'
+  )
   const isDesktop = mode === 'desktop'
 
   useEffect(() => {
@@ -105,6 +113,10 @@ export default function App({ mode = 'popup' }: AppProps) {
   const [today, setToday] = useState(getKSTToday)
   const isToday = selectedDate === today
 
+  useEffect(() => {
+    localStorage.setItem('sortType', sortType)
+  }, [sortType])
+
   // Focus add input when main process sends app:focus-add (Ctrl+Shift+N)
   const [focusAddSignal, setFocusAddSignal] = useState(0)
   useEffect(() => {
@@ -139,10 +151,13 @@ export default function App({ mode = 'popup' }: AppProps) {
     [todos]
   )
 
-  const pendingTodos = useMemo(() => todos.filter((t) => !t.completed), [todos])
+  const pendingTodos = useMemo(
+    () => sortTodos(todos.filter((t) => !t.completed), sortType),
+    [todos, sortType]
+  )
   const importantTodos = useMemo(
-    () => todos.filter((t) => t.important && !t.completed),
-    [todos]
+    () => sortTodos(todos.filter((t) => t.important && !t.completed), sortType),
+    [todos, sortType]
   )
   const focusCandidates = useMemo(
     () => (importantTodos.length > 0 ? importantTodos : pendingTodos).slice(0, 5),
@@ -171,21 +186,40 @@ export default function App({ mode = 'popup' }: AppProps) {
   }, [pendingTodos])
 
   const popupTodos = useMemo(() => {
-    switch (activeFilter) {
-      case 'today':
-        return todos.filter((t) => t.createdAt === selectedDate)
-      case 'all':
-        return todos.filter((t) => !t.completed)
-      case 'important':
-        return todos.filter((t) => t.important && !t.completed)
-      case 'completed':
-        return todos.filter((t) => t.completed)
-      case 'tag':
-        return activeTag
-          ? todos.filter((t) => !t.completed && t.tags?.includes(activeTag))
-          : todos.filter((t) => !t.completed)
+    let filtered: typeof todos
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase()
+      filtered = todos.filter(
+        (t) =>
+          t.title.toLowerCase().includes(q) ||
+          t.description?.toLowerCase().includes(q) ||
+          t.tags?.some((tag) => tag.toLowerCase().includes(q))
+      )
+    } else {
+      switch (activeFilter) {
+        case 'today':
+          filtered = todos.filter((t) => t.createdAt === selectedDate)
+          break
+        case 'all':
+          filtered = todos.filter((t) => !t.completed)
+          break
+        case 'important':
+          filtered = todos.filter((t) => t.important && !t.completed)
+          break
+        case 'completed':
+          filtered = todos.filter((t) => t.completed)
+          break
+        case 'tag':
+          filtered = activeTag
+            ? todos.filter((t) => !t.completed && t.tags?.includes(activeTag))
+            : todos.filter((t) => !t.completed)
+          break
+        default:
+          filtered = todos
+      }
     }
-  }, [todos, activeFilter, selectedDate, activeTag])
+    return sortTodos(filtered, sortType)
+  }, [todos, activeFilter, selectedDate, activeTag, searchQuery, sortType])
 
   const filtersNav = (
     <>
@@ -466,10 +500,38 @@ export default function App({ mode = 'popup' }: AppProps) {
             </aside>
 
             <section className="min-w-0 min-h-0 rounded-[20px] border border-white/[0.14] bg-[#0c0f14] shadow-[0_30px_80px_rgba(0,0,0,0.28)] flex flex-col overflow-hidden">
-              <div className="shrink-0 px-6 py-4 border-b border-white/[0.12] bg-white/[0.02]">
-                <div className="text-[12px] uppercase tracking-[0.24em] text-zinc-500">Overview</div>
-                <div className="mt-1 text-xl font-semibold text-zinc-100">Pending &amp; Important</div>
-                <p className="mt-2 text-sm text-zinc-500">큰 화면에서 남은 일과 중요한 일을 동시에 비교하면서 정리할 수 있습니다.</p>
+              <div className="shrink-0 px-6 py-4 border-b border-white/[0.12] bg-white/[0.02] flex items-start gap-4">
+                <div className="flex-1 min-w-0">
+                  <div className="text-[12px] uppercase tracking-[0.24em] text-zinc-500">Overview</div>
+                  <div className="mt-1 text-xl font-semibold text-zinc-100">Pending &amp; Important</div>
+                  <p className="mt-2 text-sm text-zinc-500">큰 화면에서 남은 일과 중요한 일을 동시에 비교하면서 정리할 수 있습니다.</p>
+                </div>
+                <div className="flex items-center gap-2 shrink-0 mt-1" style={noDrag}>
+                  <button
+                    onClick={() => {
+                      const idx = SORT_CYCLE.indexOf(sortType)
+                      setSortType(SORT_CYCLE[(idx + 1) % SORT_CYCLE.length])
+                    }}
+                    className={cn(
+                      'flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs transition-colors',
+                      sortType !== 'manual'
+                        ? 'border-teal-300/40 bg-teal-400/10 text-teal-300'
+                        : 'border-white/[0.12] text-zinc-400 hover:text-zinc-200 hover:border-white/[0.22]'
+                    )}
+                  >
+                    <ArrowUpDown size={12} />
+                    {SORT_LABELS[sortType]}
+                  </button>
+                  <div className="relative">
+                    <Search size={12} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-zinc-500 pointer-events-none" />
+                    <input
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      placeholder="검색..."
+                      className="bg-white/[0.04] border border-white/[0.06] rounded-lg pl-7 pr-3 py-1.5 text-xs text-zinc-200 placeholder:text-zinc-600 focus:outline-none focus:border-teal-500/40 w-40"
+                    />
+                  </div>
+                </div>
               </div>
               {selectedTodoIds.length > 0 && (
                 <div className="shrink-0 px-6 py-3 border-b border-white/[0.08] bg-white/[0.025] flex items-center gap-2 flex-wrap">
@@ -527,6 +589,37 @@ export default function App({ mode = 'popup' }: AppProps) {
         </div>
         <button
           style={noDrag}
+          onClick={() => {
+            const idx = SORT_CYCLE.indexOf(sortType)
+            setSortType(SORT_CYCLE[(idx + 1) % SORT_CYCLE.length])
+          }}
+          className={cn(
+            'relative flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[11px] active:scale-[0.96] after:absolute after:content-[\'\'] after:-inset-1',
+            sortType !== 'manual'
+              ? 'text-teal-400 bg-teal-500/10'
+              : 'text-zinc-600 hover:text-zinc-300 hover:bg-white/[0.04]'
+          )}
+        >
+          <ArrowUpDown size={10} />
+          {SORT_LABELS[sortType]}
+        </button>
+        <button
+          style={noDrag}
+          onClick={() => {
+            setShowSearch((v) => !v)
+            if (showSearch) setSearchQuery('')
+          }}
+          className={cn(
+            'relative size-6 flex items-center justify-center rounded-md active:scale-[0.96] after:absolute after:content-[\'\'] after:-inset-2',
+            showSearch
+              ? 'text-teal-400 bg-teal-500/10'
+              : 'text-zinc-600 hover:text-zinc-300 hover:bg-white/[0.04]'
+          )}
+        >
+          <Search size={12} />
+        </button>
+        <button
+          style={noDrag}
           onClick={() => window.api.hideWindow()}
           aria-label="닫기"
           className="relative size-6 flex items-center justify-center rounded-md text-zinc-600 hover:text-red-400 hover:bg-white/[0.04] active:scale-[0.96] after:absolute after:content-[''] after:-inset-2"
@@ -534,6 +627,20 @@ export default function App({ mode = 'popup' }: AppProps) {
           <X size={12} />
         </button>
       </div>
+      {showSearch && (
+        <div className="px-3 py-2 border-b border-white/[0.04] shrink-0">
+          <div className="relative">
+            <Search size={11} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-zinc-500 pointer-events-none" />
+            <input
+              autoFocus
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="제목, 메모, 태그 검색..."
+              className="w-full bg-white/[0.04] border border-white/[0.06] rounded-lg pl-7 pr-3 py-1.5 text-xs text-zinc-200 placeholder:text-zinc-600 focus:outline-none focus:border-teal-500/40"
+            />
+          </div>
+        </div>
+      )}
       <div className="flex items-center gap-0.5 px-2 py-1.5 border-b border-white/[0.04] shrink-0">{filtersNav}</div>
       {dateNavigator}
       {tagSelector}
