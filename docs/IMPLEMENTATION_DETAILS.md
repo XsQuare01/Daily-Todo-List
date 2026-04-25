@@ -126,6 +126,15 @@ interface Subtask {
 
 이 섹션은 로드맵을 실제 구현 단위로 더 잘게 나눈 것입니다.
 
+| 단계 | 핵심 목표 | 대표 기능 |
+|------|-----------|-----------|
+| 1단계 | 앱 실행 골격과 기본 Todo 흐름 완성 | 트레이, 팝업, 기본 위젯, Todo CRUD, 기본 IPC |
+| 2단계 | 날짜 / 태그 / 우선순위 기반 정리 기능 추가 | 태그 파싱, 날짜 네비게이터, 중요/태그 필터, 우선순위, 마감일, D-Day |
+| 3단계 | 위젯 상태 저장과 창 동작 안정화 | 위치/크기 복원, 스냅, 클릭 통과, 자동 숨김, 위젯 토글 |
+| 4단계 | 상세 편집과 위젯 상세 화면 구현 | 메모/링크/서브태스크, 위젯 상세 화면, 네트워크 날짜, 데스크톱 창 기본 동작 |
+| 5단계 | 데스크톱 작업 허브 완성 | 2열 레이아웃, 일괄 작업, Focus Session, 타이머, DnD, 태그 위젯 |
+| 6단계 | 장기 사용성 확장 | 검색, 반복 할 일, 정렬 옵션, 완료 자동 정리, 백업/내보내기 |
+
 ---
 
 ## 5. 1단계 — 앱 골격 + 기본 Todo 흐름
@@ -153,6 +162,7 @@ interface Subtask {
 - `src/preload/index.ts`
 - `src/shared/window-api.ts`
 - `src/renderer/src/App.tsx`
+- `src/renderer/src/WidgetView.tsx`
 - `src/renderer/src/lib/todos-ipc.ts`
 - `src/renderer/src/components/AddTodoInput.tsx`
 - `src/renderer/src/types/todo.ts`
@@ -195,6 +205,7 @@ interface Subtask {
 
 - `src/renderer/src/App.tsx`
 - `src/renderer/src/WidgetView.tsx`
+- `src/renderer/src/components/TodoItem.tsx`
 - `src/renderer/src/lib/todo-input.ts`
 - `src/renderer/src/lib/filters.ts`
 - `src/renderer/src/lib/date.ts`
@@ -280,6 +291,7 @@ interface Subtask {
 - `src/renderer/src/components/TodoItem.tsx`
 - `src/renderer/src/WidgetView.tsx`
 - `src/renderer/src/App.tsx`
+- `src/renderer/src/hooks/useTodos.ts`
 - `src/main/index.ts`
 - `src/renderer/src/lib/date.ts`
 
@@ -367,6 +379,20 @@ interface Subtask {
 - 백업 / 내보내기
   - JSON 내보내기 / 가져오기
 
+### 주요 작업 파일
+
+- `src/renderer/src/App.tsx`
+- `src/renderer/src/WidgetView.tsx`
+- `src/renderer/src/components/TodoList.tsx`
+- `src/renderer/src/components/TodoItem.tsx`
+- `src/renderer/src/lib/filters.ts`
+- `src/renderer/src/lib/date.ts`
+- `src/renderer/src/lib/todos-ipc.ts`
+- `src/renderer/src/types/todo.ts`
+- `src/main/todos-store.ts`
+- `src/main/settings-store.ts`
+- `src/main/index.ts`
+
 ### 완료 조건
 
 - Todo가 많아져도 검색으로 빠르게 찾을 수 있다.
@@ -379,6 +405,8 @@ interface Subtask {
 
 - 검색어로 제목/태그/메모 검색 확인
 - 반복 규칙 완료 후 다음 항목 자동 생성 확인
+- 화면별 정렬 옵션 변경 후 정렬 결과와 마지막 선택 유지 확인
+- 완료 항목 자동 정리 규칙 적용 후 숨김/아카이브 동작 확인
 - 백업 파일 내보내기 후 다시 가져오기 확인
 
 ---
@@ -425,6 +453,10 @@ interface Subtask {
 - [ ] 중요/태그 필터 동작
 - [ ] 우선순위 / 마감일 / D-Day 동작
 - [ ] 위젯 빠른 추가 및 동기화 동작
+- [ ] 위젯 위치/크기 저장 및 복원 동작
+- [ ] 위젯 스냅 동작
+- [ ] 클릭 통과 모드 동작
+- [ ] 팝업 자동 숨김 / 위젯 토글 동작
 
 ### v1.2 완료 체크
 
