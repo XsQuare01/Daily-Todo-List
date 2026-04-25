@@ -15,6 +15,12 @@ const PRIORITY_DOT: Record<Priority, string> = {
   low: 'bg-blue-400',
 }
 
+const PRIORITY_ORDER: Record<Priority, number> = {
+  high: 0,
+  medium: 1,
+  low: 2,
+}
+
 const filterTag = new URLSearchParams(window.location.search).get('tag') ?? null
 
 export default function WidgetView() {
@@ -74,7 +80,11 @@ export default function WidgetView() {
     setAddMode(false)
   }
 
-  const firstPending = todayTodos[0]
+  const sortedTodos = [...todayTodos].sort((a, b) => {
+    const pa = a.priority ? PRIORITY_ORDER[a.priority] : 3
+    const pb = b.priority ? PRIORITY_ORDER[b.priority] : 3
+    return pa - pb
+  })
 
   return (
     <div
@@ -101,33 +111,32 @@ export default function WidgetView() {
         </button>
       </div>
 
-      {/* Basic widget view */}
-      <div className="flex-1 flex items-center px-2.5 pb-2 min-h-0">
-          {firstPending ? (
-            <button
-              style={noDrag}
-              onClick={() => handleToggle(firstPending.id)}
-              className="flex items-center gap-2 w-full text-left hover:bg-white/[0.04] rounded-xl px-2 py-1.5 active:scale-[0.99]"
-            >
-              <span className="shrink-0 size-3 rounded-full border border-white/25" />
-              {firstPending.priority && (
-                <span className={cn('shrink-0 size-[5px] rounded-full', PRIORITY_DOT[firstPending.priority])} />
-              )}
-              <span className="flex-1 min-w-0 text-[12px] text-white/78 truncate">
-                {firstPending.title}
-              </span>
-              {todayTodos.length > 1 && (
-                <span className="shrink-0 text-[10px] text-white/34 tabular-nums">
-                  +{todayTodos.length - 1}
+      {/* Todo list */}
+      <div style={noDrag} className="flex-1 overflow-y-auto px-2.5 pb-2 min-h-0 scrollbar-none">
+        {sortedTodos.length > 0 ? (
+          <div className="flex flex-col gap-0.5">
+            {sortedTodos.map((todo) => (
+              <button
+                key={todo.id}
+                onClick={() => handleToggle(todo.id)}
+                className="flex items-center gap-2 w-full text-left hover:bg-white/[0.04] rounded-xl px-2 py-1.5 active:scale-[0.99]"
+              >
+                <span className="shrink-0 size-3 rounded-full border border-white/25" />
+                {todo.priority && (
+                  <span className={cn('shrink-0 size-[5px] rounded-full', PRIORITY_DOT[todo.priority])} />
+                )}
+                <span className="flex-1 min-w-0 text-[12px] text-white/78 truncate">
+                  {todo.title}
                 </span>
-              )}
-            </button>
-          ) : (
-            <div className="mx-auto text-center">
-              <div className="text-[12px] text-white/28">할 일 없음</div>
-              <div className="text-[10px] text-white/18 mt-1">필요할 때 크게 열기</div>
-            </div>
-          )}
+              </button>
+            ))}
+          </div>
+        ) : (
+          <div className="h-full flex flex-col items-center justify-center">
+            <div className="text-[12px] text-white/28">할 일 없음</div>
+            <div className="text-[10px] text-white/18 mt-1">필요할 때 크게 열기</div>
+          </div>
+        )}
       </div>
 
       {/* Inline add input */}
